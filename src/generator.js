@@ -108,6 +108,37 @@ const PATTERNS = {
     return out;
   },
 
+  // Bombeiros: coluna estreita, "V" ou um paredão com um buraco pra passar.
+  squad(rng, y, diff) {
+    const STEP = 62;
+    const forms = diff.tier >= 3 ? ['column', 'vee', 'wall', 'wall'] : ['column', 'vee', 'wall'];
+    const form = rng.pick(forms);
+    const members = [];
+    if (form === 'column') {
+      const x = rng.range(LANE_MIN + 20, ZONE.sandEnd - 60);
+      const n = rng.int(3, 4 + Math.min(3, diff.tier));
+      for (let i = 0; i < n; i++) members.push({ dx: x + (i % 2) * 14, dy: i * 80 });
+    } else if (form === 'vee') {
+      const cx = rng.range(LANE_MIN + 220, ZONE.sandEnd - 220);
+      const arms = rng.int(2, 3);
+      members.push({ dx: cx, dy: 0 });
+      for (let i = 1; i <= arms; i++) {
+        members.push({ dx: cx - i * STEP, dy: i * 70 });
+        members.push({ dx: cx + i * STEP, dy: i * 70 });
+      }
+    } else {
+      const width = Math.min(1150, 520 + diff.tier * 90);
+      const x0 = rng.range(LANE_MIN, Math.max(LANE_MIN, ZONE.sandEnd - width));
+      const gapW = diff.gapWidth + 50;
+      const gap = rng.range(x0 + STEP + 10, x0 + width - gapW - STEP - 10); // buraco sempre no meio
+      for (let x = x0; x <= x0 + width; x += STEP) {
+        if (x + 44 > gap && x < gap + gapW) continue;
+        members.push({ dx: x, dy: rng.range(0, 24) });
+      }
+    }
+    return [{ kind: 'squad', x: 0, y, form, members, speed: diff.squadSpeed, warn: diff.squadWarn }];
+  },
+
   police(rng, y) {
     return [{ kind: 'police', x: 0, y, dir: rng.chance(0.6) ? 1 : -1 }];
   },

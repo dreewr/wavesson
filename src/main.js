@@ -18,7 +18,7 @@ const store = {
   set(v) { try { localStorage.setItem(BEST_KEY, JSON.stringify(v)); } catch {} },
 };
 
-const CAUSES = { left: 'Ficou pra trás', dog: 'Cachorro', lifeguard: 'Salva-vidas', surfer: 'Surfista desatento', police: 'Viatura', sea: 'Correnteza' };
+const CAUSES = { left: 'Ficou pra trás', dog: 'Cachorro', lifeguard: 'Salva-vidas', surfer: 'Surfista desatento', bombeiro: 'Bombeiros', police: 'Viatura', sea: 'Correnteza' };
 
 let screen = 'loading';
 let run = null;
@@ -69,6 +69,9 @@ function onEvent(name, data) {
     case 'crumble': s.crumble(); break;
     case 'siren': s.siren(); break;
     case 'surfer': s.surfer(); break;
+    case 'squadWarn': s.whistle(); break;
+    case 'squadRun': s.stomp(); renderer.shake(5); break;
+    case 'dodge': s.dodge(); renderer.float(`passou liso! +${data.pts}`, 870, run.cameraY + 320, '#9cff8a', 34); break;
     case 'tideWarn': s.tideWarn(); break;
     case 'tide': s.tide(); renderer.shake(10); break;
     case 'biome': s.gas(); renderer.float(data.name.toUpperCase(), 800, run.cameraY + 300, '#fff', 64); break;

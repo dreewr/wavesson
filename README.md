@@ -24,7 +24,7 @@ No celular aparecem os botões PIQUE e pausa.
 | Mapa fixo de 52.000 px montado à mão | Praia infinita gerada por seed, fileira a fileira |
 | Cada regra copiada 6× (uma por integrante, `favelado_1..6`) | Uma lista `crew[]`; o bonde pode ter qualquer tamanho |
 | Dificuldade constante | Velocidade, densidade e perigos crescem com a distância (`src/difficulty.js`) |
-| Só cachorro e salva-vidas matavam (o Surfista Desatento estava nas instruções mas nunca foi feito) | + Surfista Desatento de verdade, viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
+| Só cachorro e salva-vidas matavam (o Surfista Desatento estava nas instruções mas nunca foi feito) | + Surfista Desatento de verdade, pelotão de bombeiros subindo a praia (com aviso na borda de baixo), viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
 | Pontos só por item | Multiplicador pelo tamanho do bando, **combo** de itens seguidos e vantagens roguelike a cada trecho |
 | Só dava pra andar | **Pique**: arrancada curta com recarga e um respiro de invulnerabilidade |
 | — | **Hora do Arrastão** a cada praia nova: fartura e pontos em dobro |

@@ -194,6 +194,7 @@ export class Run {
     const def = DEFS[spec.kind];
     const e = { ...spec, def, w: def.w, h: def.h, t: 0, dead: false, sprite: def.sprites.length ? this.rng.pick(def.sprites) : null };
     if (e.kind === 'dog') { e.cx = spec.x; e.x = spec.x - def.w / 2; }
+    if (e.kind === 'squad') return this.spawnSquad(spec);
     if (e.kind === 'police') {
       e.state = 'waiting';
       e.speed = diff.policeSpeed;
@@ -201,6 +202,44 @@ export class Run {
       e.x = e.dir > 0 ? -def.w - 40 : VIEW_W + 40;
     }
     this.entities.push(e);
+  }
+
+  spawnSquad(spec) {
+    const squad = { state: 'waiting', t: 0, tick: -1, y: spec.y, baseY: spec.y, speed: spec.speed, warn: spec.warn, form: spec.form, hit: false, size: spec.members.length };
+    squad.depth = Math.max(...spec.members.map((m) => m.dy)) + DEFS.bombeiro.h;
+    for (const m of spec.members) {
+      this.entities.push({
+        kind: 'bombeiro', def: DEFS.bombeiro, w: DEFS.bombeiro.w, h: DEFS.bombeiro.h,
+        x: m.dx, y: spec.y + m.dy, dx: m.dx, dy: m.dy, squad, t: this.rng.range(0, 1), dead: false,
+        tone: this.rng.int(0, 3),
+      });
+    }
+  }
+
+  // Um pelotão: espera → aviso preso na borda de baixo → sobe correndo → some por cima.
+  updateSquad(q, dt) {
+    if (q.tick === this.time) return;
+    q.tick = this.time;
+    const viewBottom = this.cameraY + VIEW_H;
+    if (q.state === 'waiting') {
+      if (q.y < viewBottom + 400) { q.state = 'warn'; q.t = 0; this.emit('squadWarn', q); }
+      return;
+    }
+    q.t += dt;
+    if (q.state === 'warn') {
+      q.baseY = viewBottom + 30;
+      if (q.t >= q.warn + this.mods.warnBonus) { q.state = 'run'; q.t = 0; this.emit('squadRun', q); }
+    } else if (q.state === 'run') {
+      q.baseY -= q.speed * dt;
+      if (q.baseY + q.depth < this.cameraY - 40) {
+        q.state = 'done';
+        if (!q.hit && this.crew.length) {
+          const pts = Math.round(100 * this.mods.scoreMult * this.crewMult);
+          this.score += pts;
+          this.emit('dodge', { pts });
+        }
+      }
+    }
   }
 
   updateTide(dt, diff) {
@@ -257,6 +296,11 @@ export class Run {
               e.y += (dy / d) * e.chase * dt;
             }
           }
+          break;
+        case 'bombeiro':
+          this.updateSquad(e.squad, dt);
+          if (e.squad.state !== 'waiting') e.y = e.squad.baseY + e.dy;
+          if (e.squad.state === 'done') e.dead = true;
           break;
         case 'surfer':
           // sai da água, para um instante ajeitando a prancha e atravessa a praia sem olhar
@@ -383,9 +427,11 @@ export class Run {
       if (role === 'solid' || role === 'decor') continue;
       if (e.kind === 'police' && e.state !== 'drive') continue;
       if (e.kind === 'surfer' && e.state === 'waiting') continue;
+      if (e.kind === 'bombeiro' && e.squad.state !== 'run') continue;
       if (!overlaps(body, box(e, e.def.hit))) continue;
 
       if (role === 'deadly') {
+        if (e.squad) e.squad.hit = true;
         if (this.kill(m, e.kind)) return;
       } else if (role === 'slow') {
         if (!this.mods.slowImmune) m.slowT = 1.6;
@@ -430,6 +476,13 @@ export class Run {
   cull() {
     const top = this.cameraY - 300;
     this.entities = this.entities.filter((e) => !e.dead && e.y + e.h > top);
+  }
+
+  // pelotões ativos (pra desenhar o aviso)
+  get squads() {
+    const set = new Set();
+    for (const e of this.entities) if (e.squad && e.squad.state !== 'done') set.add(e.squad);
+    return [...set].map((q) => ({ q, members: this.entities.filter((e) => e.squad === q) }));
   }
 
   // para render: tudo na tela, ordenado pela base (profundidade)

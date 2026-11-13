@@ -99,6 +99,9 @@ export function createRenderer(canvas, images) {
       case 'surfer':
         drawSurfer(e, sy);
         return;
+      case 'bombeiro':
+        drawBombeiro(e, sy);
+        return;
       case 'flipflop': case 'phone': case 'bag': {
         const pulse = 1 + Math.sin(e.t * 8) * 0.06;
         const w = e.w * pulse, h = e.h * pulse;
@@ -154,6 +157,43 @@ export function createRenderer(canvas, images) {
       ctx.fillRect(e.x + e.w - 6, sy + e.h - 12, 6, 6);
       ctx.fillRect(e.x + e.w + 6, sy + e.h - 20, 5, 5);
     }
+  }
+
+  const SKIN = ['#f1c27d', '#e0ac69', '#c68642', '#8d5524'];
+
+  // Bombeiro guarda-vidas de sunga, em pixel art feita no código
+  // (correndo de costas pra câmera, subindo a praia).
+  function drawBombeiro(e, sy) {
+    const running = e.squad.state === 'run';
+    const ph = running ? Math.floor(e.t * 12) % 2 : 0;
+    const x = Math.round(e.x), y = Math.round(sy);
+    const skin = SKIN[e.tone % SKIN.length];
+    const R = (c, rx, ry, rw, rh) => { ctx.fillStyle = c; ctx.fillRect(x + rx, y + ry, rw, rh); };
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(x + 22, y + 97, 16, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // pernas alternando
+    R(skin, 12, 70, 8, ph ? 22 : 26);
+    R(skin, 24, 70, 8, ph ? 26 : 22);
+    R('#222', 11, ph ? 90 : 94, 10, 4);
+    R('#222', 23, ph ? 94 : 90, 10, 4);
+    // sunga vermelha
+    R('#d32f2f', 10, 60, 24, 12);
+    R('#ffd600', 10, 60, 24, 3);
+    // tronco e braços balançando
+    R(skin, 11, 32, 22, 30);
+    R(skin, 3, ph ? 34 : 40, 8, 22);
+    R(skin, 33, ph ? 40 : 34, 8, 22);
+    // cabeça + boné de guarda-vidas (vermelho com aba amarela)
+    R(skin, 14, 14, 16, 18);
+    R('#d32f2f', 12, 6, 20, 10);
+    R('#ffd600', 12, 14, 20, 3);
+    R('#000', 13, 6, 18, 2);
+    // número nas costas
+    R('#fff', 18, 40, 8, 8);
+    R('#d32f2f', 21, 41, 2, 6);
+    R('#d32f2f', 19, 43, 6, 2);
   }
 
   function drawPolice(run, e, sy) {
@@ -427,8 +467,53 @@ export function createRenderer(canvas, images) {
     });
   }
 
+  // Aviso dos bombeiros: as faixas exatas por onde o pelotão vai subir
+  // piscam na borda de baixo, com setas e contagem. O buraco do paredão fica limpo.
+  function drawSquadWarnings(run) {
+    for (const { q, members } of run.squads) {
+      if (q.state !== 'warn') continue;
+      const total = q.warn + run.mods.warnBonus;
+      const left = Math.max(0, total - q.t);
+      const blink = Math.floor(q.t * (left < 0.6 ? 14 : 7)) % 2 === 0;
+      const H = 170;
+      // faixas ocupadas (mescla bombeiros vizinhos)
+      const xs = members.map((e) => [e.x, e.x + e.w]).sort((a, b) => a[0] - b[0]);
+      const lanes = [];
+      for (const [a, b] of xs) {
+        const last = lanes[lanes.length - 1];
+        if (last && a <= last[1] + 24) last[1] = Math.max(last[1], b);
+        else lanes.push([a, b]);
+      }
+      for (const [a, b] of lanes) {
+        const g = ctx.createLinearGradient(0, VIEW_H, 0, VIEW_H - H);
+        g.addColorStop(0, blink ? 'rgba(229,57,53,0.55)' : 'rgba(255,214,0,0.5)');
+        g.addColorStop(1, 'rgba(229,57,53,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(a - 6, VIEW_H - H, b - a + 12, H);
+        // setinhas subindo
+        for (let x = a + 6; x < b; x += 44) {
+          const yy = VIEW_H - 18 - ((q.t * 120) % 60);
+          ctx.fillStyle = blink ? '#e53935' : '#ffd600';
+          ctx.beginPath();
+          ctx.moveTo(x + 10, yy - 16); ctx.lineTo(x + 22, yy); ctx.lineTo(x - 2, yy);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      const cx = (lanes[0][0] + lanes[lanes.length - 1][1]) / 2;
+      const lx = Math.min(VIEW_W - 200, Math.max(200, cx));
+      text('BOMBEIROS!', lx, VIEW_H - 112, { size: 42, color: '#d32f2f', stroke: '#fff', align: 'center', italic: true });
+      // barrinha da contagem
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(lx - 90, VIEW_H - 98, 180, 10);
+      ctx.fillStyle = '#d32f2f';
+      ctx.fillRect(lx - 88, VIEW_H - 96, 176 * (left / total), 6);
+    }
+  }
+
   function drawHud(run, best) {
     drawDanger(run);
+    drawSquadWarnings(run);
     // o bilhete fica translúcido quando tem gente do bando passando por baixo
     ctx.globalAlpha = crewUnder(run, 615, 0, 1125, 212) ? 0.35 : 1;
     drawCard(run);

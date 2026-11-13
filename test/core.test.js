@@ -214,3 +214,51 @@ test('bando pequeno ganha mais chance de recrutar', () => {
   run.crew.length = 2;
   assert.ok(run.recruitBoost > full * 2);
 });
+
+function squadRun(form, seed = 'bombeiros') {
+  const events = [];
+  const run = new Run({ seed, onEvent: (n, d) => events.push([n, d]) });
+  run.entities = [];
+  run.nextRowY = Infinity;
+  run.nextPerkAt = Infinity;
+  const rng = createRng(seed + form);
+  let spec;
+  do { spec = generateRow(rng, run.cameraY + VIEW_H + 100, difficultyAt(600), {}).specs.find((s) => s.kind === 'squad'); }
+  while (!spec || spec.form !== form);
+  run.spawn(spec, difficultyAt(600));
+  return { run, events, spec };
+}
+
+import { VIEW_H } from '../src/config.js';
+
+test('bombeiros avisam antes e não derrubam ninguém durante o aviso', () => {
+  const { run, events, spec } = squadRun('column');
+  // bando parado bem na faixa da coluna, perto da borda de baixo
+  run.crew.forEach((m) => { m.x = spec.members[0].dx; });
+  let warnedAt = null, ranAt = null;
+  for (let i = 0; i < 60 * 8 && run.crew.length; i++) {
+    run.crew.forEach((m) => { m.x = spec.members[0].dx; });
+    run.update(1 / 60, { x: 0, y: 0 });
+    if (warnedAt === null && events.some(([n]) => n === 'squadWarn')) warnedAt = run.time;
+    if (ranAt === null && events.some(([n]) => n === 'squadRun')) ranAt = run.time;
+    if (ranAt === null) assert.ok(!run.deaths.bombeiro, 'derrubou durante o aviso');
+  }
+  assert.ok(warnedAt !== null && ranAt !== null);
+  assert.ok(ranAt - warnedAt >= spec.warn - 0.05, `aviso durou ${(ranAt - warnedAt).toFixed(2)}s`);
+  assert.ok(run.deaths.bombeiro > 0, 'quem ficou na faixa deveria ser derrubado');
+});
+
+test('paredão de bombeiros sempre deixa um buraco e quem passa nele ganha bônus', () => {
+  const { run, events, spec } = squadRun('wall');
+  const xs = spec.members.map((m) => m.dx).sort((a, b) => a - b);
+  let gap = null;
+  for (let i = 1; i < xs.length; i++) if (xs[i] - (xs[i - 1] + 44) >= 150) gap = (xs[i - 1] + 44 + xs[i]) / 2;
+  assert.ok(gap !== null, 'paredão sem buraco');
+  // bando todo enfileirado no buraco
+  for (let i = 0; i < 60 * 10 && !events.some(([n]) => n === 'dodge'); i++) {
+    run.crew.forEach((m, k) => { m.x = gap - 17; m.y = run.cameraY + 200 + k * 2; });
+    run.update(1 / 60, { x: 0, y: 0 });
+  }
+  assert.ok(!run.deaths.bombeiro, JSON.stringify(run.deaths));
+  assert.ok(events.some(([n]) => n === 'dodge'), 'passou liso deveria dar bônus');
+});

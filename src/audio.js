@@ -100,6 +100,10 @@ export function createAudio() {
     tideWarn: () => tone(110, 0.6, { type: 'sine', vol: 0.15, slide: 40 }),
     tide: () => noise(1.4, 0.25),
     surfer: () => noise(0.35, 0.12),
+    // apito de guarda-vidas: trinado agudo
+    whistle: () => { for (let i = 0; i < 6; i++) tone(i % 2 ? 2900 : 2500, 0.07, { delay: i * 0.075, type: 'square', vol: 0.05 }); tone(2700, 0.35, { delay: 0.5, type: 'square', vol: 0.05 }); },
+    stomp: () => { for (let i = 0; i < 4; i++) setTimeout(() => noise(0.08, 0.12), i * 110); },
+    dodge: () => { tone(784, 0.08, { type: 'triangle' }); tone(1175, 0.14, { delay: 0.08, type: 'triangle' }); },
     siren: () => { if (!muted) { siren.currentTime = 0; siren.play().catch(() => {}); } },
     gas: () => { if (!muted) { gas.currentTime = 0; gas.play().catch(() => {}); } },
     gameover: () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.2, { delay: i * 0.15, type: 'sawtooth', vol: 0.07 })),

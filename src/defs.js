@@ -20,6 +20,10 @@ export const DEFS = {
   // Surfista Desatento: estava na página de inimigos de 2017 mas nunca foi feito.
   // Sai do mar com a prancha debaixo do braço e atravessa a praia sem olhar.
   surfer: { w: 150, h: 104, role: 'deadly', hit: { ox: 6, oy: 46, w: 138, h: 54 }, sprites: [] },
+  // Pelotão de bombeiros (guarda-vidas de sunga) subindo a praia correndo.
+  // A run expande o 'squad' em vários 'bombeiro', todos presos à mesma formação.
+  bombeiro: { w: 44, h: 100, role: 'deadly', hit: { ox: 9, oy: 14, w: 26, h: 82 }, sprites: [] },
+  squad: { w: 0, h: 0, role: 'event', hit: null, sprites: [] },
   police: { w: 220, h: 100, role: 'deadly', hit: { ox: 8, oy: 10, w: 204, h: 84 }, sprites: [] },
   recruit: { w: 34, h: 100, role: 'recruit', hit: { ox: 0, oy: 10, w: 34, h: 90 }, sprites: [] },
   flipflop: { w: 40, h: 50, role: 'loot', hit: { ox: 0, oy: 0, w: 40, h: 50 }, sprites: ['flipflop_0', 'flipflop_1'], points: 10 },
