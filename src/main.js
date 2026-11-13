@@ -26,9 +26,23 @@ let renderer, input, audio;
 let paused = false;
 let bestScore = 0;
 
+// Telas do menu (.screen) vivem no palco de 1600x720; janelas do jogo (.overlay) ficam por cima do canvas.
 function show(id) {
-  for (const el of document.querySelectorAll('.overlay')) el.classList.toggle('show', el.id === id);
+  for (const el of document.querySelectorAll('.screen, .overlay')) el.classList.toggle('show', el.id === id);
+  document.body.classList.toggle('in-menu', !!document.querySelector('.screen.show'));
   screen = id ?? 'game';
+}
+
+function fitStage() {
+  const s = Math.min(innerWidth / 1600, innerHeight / 720);
+  document.getElementById('stage').style.setProperty('--s', s);
+}
+
+function howtoPage(delta) {
+  const el = $('howto');
+  const page = Math.max(1, Math.min(3, Number(el.dataset.page) + delta));
+  el.dataset.page = page;
+  el.querySelector(`.p${page}[data-action="next"], .p${page}[data-action="back"]`)?.focus();
 }
 
 function todaySeed() {
@@ -46,7 +60,7 @@ function onEvent(name, data) {
   const s = audio.sfx;
   switch (name) {
     case 'loot': s.loot(data.kind); renderer.float(`+${data.pts}`, data.x + 20, data.y, '#ffe14d'); break;
-    case 'recruit': if (data.n > 1) s.gas(); else s.recruit(); if (data.x != null) renderer.float('+1 no bonde', data.x + 17, data.y, '#9cff8a', 24); break;
+    case 'recruit': if (data.n > 1) s.gas(); else s.recruit(); if (data.x != null) renderer.float('+1 Wavesson', data.x + 17, data.y, '#9cff8a', 24); break;
     case 'death': s.death(); renderer.shake(14); renderer.float('rodou!', data.x + 17, data.y + 30, '#ff5252', 26); break;
     case 'shield': s.shield(); renderer.float('livrou!', data.x + 17, data.y, '#7fe3ff', 26); break;
     case 'crumble': s.crumble(); break;
@@ -99,7 +113,7 @@ function openGameOver() {
     ${record ? '<div class="record">NOVO RECORDE!</div>' : `<div>Recorde: ${Math.floor(best.score).toLocaleString('pt-BR')}</div>`}
     <table>
       <tr><td>Distância</td><td>${Math.floor(run.meters)} m (${run.biome.name})</td></tr>
-      <tr><td>Maior bonde</td><td>${run.maxCrew}</td></tr>
+      <tr><td>Maior bando</td><td>${run.maxCrew}</td></tr>
       <tr><td>Recrutados</td><td>${run.recruited}</td></tr>
       <tr><td>Celulares / bolsas / chinelos</td><td>${run.loot.phone} / ${run.loot.bag} / ${run.loot.flipflop}</td></tr>
       ${deaths}
@@ -117,7 +131,7 @@ function renderTracks() {
   for (const t of TRACKS) {
     const b = document.createElement('button');
     b.className = 'track' + (t.id === audio.trackId ? ' selected' : '');
-    b.textContent = (t.id === audio.trackId ? '▶ ' : '') + t.name;
+    b.textContent = t.name;
     b.onclick = () => { audio.setTrack(t.id); renderTracks(); };
     list.appendChild(b);
   }
@@ -137,7 +151,9 @@ function bindUi() {
     switch (action) {
       case 'play': return startRun();
       case 'daily': return startRun(todaySeed());
-      case 'howto': return show('howto');
+      case 'howto': $('howto').dataset.page = 1; return show('howto');
+      case 'next': return howtoPage(1);
+      case 'prev': return howtoPage(-1);
       case 'credits': return show('credits');
       case 'music': renderTracks(); return show('music');
       case 'back': return show('menu');
@@ -153,7 +169,12 @@ function bindUi() {
       const p = run.perkChoices?.[Number(e.code.at(-1)) - 1];
       if (p) pickPerk(p);
     }
-    if (e.code === 'KeyP' || e.code === 'Escape') togglePause();
+    if (e.code === 'KeyP' || e.code === 'Escape') {
+      if (screen === 'howto' || screen === 'credits' || screen === 'music') return show('menu');
+      togglePause();
+    }
+    if (screen === 'howto' && e.code === 'ArrowRight') howtoPage(1);
+    if (screen === 'howto' && e.code === 'ArrowLeft') howtoPage(-1);
     if (e.code === 'Enter' && screen === 'menu' && document.activeElement === document.body) startRun();
     if (e.code === 'Enter' && screen === 'gameover' && document.activeElement === document.body) startRun();
   });
@@ -162,6 +183,8 @@ function bindUi() {
 }
 
 async function boot() {
+  fitStage();
+  addEventListener('resize', fitStage);
   audio = createAudio();
   audio.init();
   const images = await loadImages((p) => { $('loadpct').textContent = `${Math.round(p * 100)}%`; });

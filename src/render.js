@@ -167,7 +167,7 @@ export function createRenderer(canvas, images) {
   // ------------------------------------------------------------ HUD
 
   function label(text, x, y, color = '#fff', size = 28, stroke = '#000', align = 'center') {
-    ctx.font = `900 ${size}px "Trebuchet MS", "Arial Black", system-ui, sans-serif`;
+    ctx.font = `700 ${size}px Arial, Helvetica, sans-serif`;
     ctx.textAlign = align;
     ctx.lineJoin = 'round';
     ctx.lineWidth = Math.max(3, size / 6);
@@ -177,23 +177,49 @@ export function createRenderer(canvas, images) {
     ctx.fillText(text, x, y);
   }
 
-  function drawHud(run, best) {
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    roundRect(16, 14, 330, 150, 14);
-    label(`${Math.floor(run.score).toLocaleString('pt-BR')} pts`, 32, 54, '#ffe14d', 34, '#000', 'left');
-    label(`Bonde: ${run.crew.length}  (x${run.crewMult.toFixed(2)})`, 32, 90, '#fff', 24, '#000', 'left');
-    label(`${Math.floor(run.meters)} m  ·  ${run.biome.name}`, 32, 120, '#fff', 24, '#000', 'left');
-    const shields = run.mods.shields;
-    label(shields ? `Escudos: ${'◆'.repeat(Math.min(shields, 8))}${shields > 8 ? '+' : ''}` : `Recorde: ${Math.floor(best)}`, 32, 150, shields ? '#7fe3ff' : '#ccc', 20, '#000', 'left');
+  // HUD no layout do original: rótulos em Arial negrito preto no topo central
+  // ("Pontos:", "Wavessons:", "Distância:") com os valores ao lado.
+  // Melhorias: contorno branco pra ler em cima de guarda-sol, multiplicador,
+  // nome da praia, escudos e a barra até a próxima vantagem.
+  function hudText(text, x, y, { bold = false, size = 32, align = 'left', color = '#000' } = {}) {
+    ctx.font = `${bold ? 700 : 400} ${size}px Arial, Helvetica, sans-serif`;
+    ctx.textAlign = align;
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.strokeText(text, x, y);
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  }
 
-    // barra até o próximo perk
+  function drawHud(run, best) {
+    const LX = 878, VX = 928; // colunas do layout Track de 2017
+    hudText('Pontos:', LX, 80, { bold: true, align: 'right' });
+    hudText(Math.floor(run.score).toLocaleString('pt-BR'), VX, 80);
+    hudText('Wavessons:', LX, 130, { bold: true, align: 'right' });
+    hudText(String(run.crew.length), VX, 130);
+    const crewW = ctx.measureText(String(run.crew.length)).width;
+    hudText(`×${run.crewMult.toFixed(2).replace('.', ',')}`, VX + crewW + 14, 130, { size: 22, color: '#3a3d9b' });
+    hudText('Distância:', LX, 180, { bold: true, align: 'right' });
+    hudText(`${Math.floor(run.meters)} m`, VX, 180);
+    const distW = ctx.measureText(`${Math.floor(run.meters)} m`).width;
+    hudText(run.biome.name, VX + distW + 14, 180, { size: 22, color: '#3a3d9b' });
+
+    // barra fina até a próxima vantagem, logo abaixo
     const prevAt = run.nextPerkAt - run.perkStep;
     const p = Math.max(0, Math.min(1, (run.meters - prevAt) / (run.nextPerkAt - prevAt)));
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    roundRect(VIEW_W / 2 - 160, 16, 320, 18, 9);
-    ctx.fillStyle = '#ffe14d';
-    roundRect(VIEW_W / 2 - 157, 19, 314 * p, 12, 6);
-    label('próximo corre', VIEW_W / 2, 56, '#fff', 18);
+    const bx = 678, bw = 420, by = 198;
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillRect(bx - 2, by - 2, bw + 4, 10);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(bx, by, bw * p, 6);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx, by, bw, 6);
+
+    const shields = run.mods.shields;
+    if (shields) hudText(`Escudos: ${'◆'.repeat(Math.min(shields, 8))}${shields > 8 ? '+' : ''}`, VX, 232, { size: 22, color: '#1565c0' });
+    if (best > 0) hudText(`Recorde: ${Math.floor(best).toLocaleString('pt-BR')}`, VIEW_W - 24, 40, { size: 22, align: 'right', color: '#444' });
   }
 
   function roundRect(x, y, w, h, r) {

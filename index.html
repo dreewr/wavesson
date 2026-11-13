@@ -6,87 +6,112 @@
   <title>Wavesson</title>
   <meta name="description" content="Wavesson: o arrastão roguelike infinito no calçadão." />
   <link rel="icon" href="assets/icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <canvas id="game" aria-label="Wavesson"></canvas>
 
-  <section id="loading" class="overlay show"><p>Carregando a praia… <span id="loadpct">0%</span></p></section>
+  <!-- Telas no layout original de 2017 (janela de 1600x720, escalada pra caber) -->
+  <div id="stage">
+    <section id="loading" class="screen show"><p class="hand">Carregando a praia… <span id="loadpct">0%</span></p></section>
 
-  <section id="menu" class="overlay">
-    <div class="menu-sea"></div>
-    <img class="logo" src="assets/img/logo.png" alt="Wavesson" />
-    <img class="head" src="assets/img/head.png" alt="" />
-    <nav class="buttons">
-      <button data-action="play" class="primary">Jogar</button>
-      <button data-action="daily">Desafio do dia</button>
-      <button data-action="music">Música</button>
-      <button data-action="howto">Como jogar</button>
-      <button data-action="credits">Créditos</button>
-    </nav>
-    <p class="best" id="menuBest"></p>
-  </section>
+    <section id="menu" class="screen beach">
+      <button class="spr" data-action="play" style="--x:559px;--y:244px;--w:343px;--h:81px">
+        <img src="assets/ui/btn_start.png" alt="Start" />
+      </button>
+      <button class="link" data-action="daily" style="--x:559px;--y:311px">desafio do dia</button>
+      <button class="spr" data-action="music" style="--x:555px;--y:377px;--w:441px;--h:85px">
+        <img src="assets/ui/btn_options.png" alt="Options" />
+      </button>
+      <button class="spr" data-action="howto" style="--x:1229px;--y:247px;--w:738px;--h:82px">
+        <img src="assets/ui/btn_instructions.png" alt="Instructions" />
+      </button>
+      <button class="spr" data-action="credits" style="--x:1235px;--y:390px;--w:412px;--h:81px">
+        <img src="assets/ui/btn_credits.png" alt="Credits" />
+      </button>
+      <img class="sprite head" src="assets/img/head.png" alt="" style="--x:167px;--y:301px;--w:295px;--h:280px" />
+      <div class="menu-sea"></div>
+      <img class="sprite logo" src="assets/img/logo.png" alt="Wavesson" style="--x:727px;--y:614px;--w:1441px;--h:182px" />
+      <img class="sprite andre" src="assets/ui/andre.png" alt="" style="--x:1515px;--y:606px;--w:68px;--h:172px" />
+      <p class="best hand" id="menuBest"></p>
+    </section>
 
-  <section id="howto" class="overlay panel-overlay">
-    <div class="panel">
-      <h2>Como jogar</h2>
-      <p>Você comanda o bonde inteiro de uma vez: <b>WASD / setas</b>, ou arraste o dedo/mouse na tela.
-        A praia rola sozinha. Quem fica pra trás da tela, roda.</p>
-      <ul>
-        <li><b>Chinelo</b> 10 · <b>Celular</b> 100 · <b>Bolsa</b> 200, vezes o tamanho do bonde.</li>
-        <li><b>Gente com “!”</b>: encosta e entra pro bonde.</li>
-        <li><b>Cachorro, salva-vidas e viatura</b>: encostou, perdeu um integrante.</li>
-        <li><b>Guarda-sol, rede, coqueiro, picolé</b>: bloqueiam e empurram.</li>
-        <li><b>Castelo de areia e água rasa</b> atrasam. <b>Água funda</b> leva embora.</li>
-        <li>Quando aparecer <b>ONDA VINDO!</b>, sai da beira do mar.</li>
-        <li>A cada trecho você escolhe 1 de 3 <b>vantagens</b>. Fica mais rápido e mais cheio quanto mais longe.</li>
-      </ul>
-      <p class="keys"><b>P</b>/<b>Esc</b> pausa · <b>M</b> som · <b>1 2 3</b> escolhem vantagem</p>
-      <button data-action="back">Voltar</button>
-    </div>
-  </section>
+    <section id="howto" class="screen beach" data-page="1">
+      <div class="page" data-page="1">
+        <img class="sprite" src="assets/ui/inst1.png" alt="Instruções: você controla um grupo que inicia um arrastão nas praias do RJ. Setas movem o bando, P pausa." style="--x:804px;--y:259px;--w:1578px;--h:238px" />
+      </div>
+      <div class="page" data-page="2">
+        <img class="sprite" src="assets/ui/inst2.png" alt="Inimigos: cachorro e salva-vidas tiram um personagem; castelo de areia reduz a velocidade; rede de vôlei e carro de picolé bloqueiam." style="--x:793px;--y:332px;--w:1547px;--h:309px" />
+      </div>
+      <div class="page news hand" data-page="3">
+        <h2>NOVIDADES</h2>
+        <div class="cols">
+          <div>
+            <p class="big">A praia agora não acaba.<br />Quanto mais longe, mais rápido<br />e mais cheio fica.</p>
+            <p>A cada trecho você escolhe <b>1 de 3 vantagens</b>.<br />Bando maior = pontos multiplicados.</p>
+          </div>
+          <div class="list">
+            <p><b>Viatura</b><span>Perde um personagem · sirene avisa antes</span></p>
+            <p><b>Onda</b><span>A água avança · saia da beira!</span></p>
+            <p><b>Água funda</b><span>A correnteza leva</span></p>
+            <p><b>Galera com “!”</b><span>Encosta e entra pro bando</span></p>
+          </div>
+          <div class="list">
+            <p><b>Chinelo</b><span>10 pts</span></p>
+            <p><b>Celular</b><span>100 pts</span></p>
+            <p><b>Bolsa</b><span>200 pts</span></p>
+            <p><b>WASD · arrastar</b><span>também movem · M liga/desliga o som</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="menu-sea"></div>
+      <button class="spr p1" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+      <button class="spr p2 p3" data-action="prev" style="--x:167px;--y:659px;--w:253px;--h:76px"><img src="assets/ui/btn_back.png" alt="Back" /></button>
+      <button class="spr p1 p2" data-action="next" style="--x:1431px;--y:649px;--w:288px;--h:82px"><img src="assets/ui/btn_next.png" alt="Next" /></button>
+      <button class="spr p3" data-action="back" style="--x:1431px;--y:649px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+    </section>
 
-  <section id="music" class="overlay panel-overlay">
-    <div class="panel">
-      <h2>Música</h2>
-      <p>As faixas que a equipe separou na hackathon.</p>
-      <div class="tracks" id="trackList"></div>
-      <button data-action="back" class="primary">Voltar</button>
-    </div>
-  </section>
+    <section id="credits" class="screen beach">
+      <img class="sprite" src="assets/ui/credits_title.png" alt="Credits" style="--x:196px;--y:226px;--w:379px;--h:75px" />
+      <img class="sprite" src="assets/ui/credits_names.png" alt="André Rodrigues, Henrique Hamilko, Eduardo Hamilko, Maria Augusta" style="--x:804px;--y:401px;--w:1584px;--h:242px" />
+      <p class="hand remake">hackathon · janeiro de 2017<br />remake infinito · 2026</p>
+      <div class="menu-sea"></div>
+      <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+    </section>
 
-  <section id="credits" class="overlay panel-overlay">
-    <div class="panel">
-      <h2>Créditos</h2>
-      <p>Criado em janeiro de 2017 numa hackathon pela equipe <b>Wavesson02</b>,
-        no Construct 2. Arte, sprites e trilha são da equipe original.</p>
-      <p>Remake em 2026: port pra HTML5 puro, praia infinita gerada por seed,
-        dificuldade progressiva e vantagens estilo roguelike.</p>
-      <button data-action="back">Voltar</button>
-    </div>
-  </section>
+    <section id="music" class="screen beach">
+      <img class="sprite" src="assets/ui/btn_options.png" alt="Options" style="--x:300px;--y:200px;--w:441px;--h:85px" />
+      <div class="tracks hand" id="trackList"></div>
+      <div class="menu-sea"></div>
+      <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+    </section>
+  </div>
 
-  <section id="perk" class="overlay panel-overlay">
-    <div class="panel wide">
+  <!-- Janelas sobre o jogo -->
+  <section id="perk" class="overlay">
+    <div class="paper wide">
       <h2>Escolhe a próxima</h2>
       <div class="cards" id="perkCards"></div>
     </div>
   </section>
 
-  <section id="pause" class="overlay panel-overlay">
-    <div class="panel">
-      <h2>Pausado</h2>
-      <button data-action="resume" class="primary">Continuar</button>
-      <button data-action="quit">Sair pro menu</button>
+  <section id="pause" class="overlay">
+    <div class="paper">
+      <h2>Pause</h2>
+      <button data-action="resume" class="ink primary">continuar (P)</button>
+      <button data-action="quit" class="ink">sair pro menu</button>
     </div>
   </section>
 
-  <section id="gameover" class="overlay panel-overlay">
-    <div class="panel">
-      <h2>O bonde rodou</h2>
+  <section id="gameover" class="overlay">
+    <div class="paper">
+      <h2>O bando rodou!</h2>
       <div id="summary"></div>
-      <button data-action="again" class="primary">Mais uma (Enter)</button>
-      <button data-action="quit">Menu</button>
+      <button data-action="again" class="ink primary">mais uma (Enter)</button>
+      <button data-action="quit" class="ink">menu</button>
     </div>
   </section>
 

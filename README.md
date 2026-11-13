@@ -26,6 +26,7 @@ Abra http://localhost:5173. Sem build, sem dependências. `?seed=QUALQUERCOISA` 
 | Só cachorro e salva-vidas matavam | + viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
 | Pontos só por item | Multiplicador pelo tamanho do bonde + vantagens roguelike a cada trecho |
 | — | Recorde local, desafio do dia (seed por data), toque no celular |
+| Menu, instruções, créditos e HUD de texto no topo | Mesmo layout e sprites de 2017; HUD ganhou multiplicador, praia, escudos e barra da próxima vantagem; página extra de instruções com as novidades |
 | Botão Options sem função, músicas importadas e nunca tocadas | Seletor de música no menu com as faixas da equipe; vinheta do gás na troca de praia |
 
 ## Estrutura
