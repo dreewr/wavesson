@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Wavesson</title>
+  <meta name="description" content="Wavesson: o arrastão roguelike infinito no calçadão." />
+  <link rel="icon" href="assets/icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="game" aria-label="Wavesson"></canvas>
+
+  <section id="loading" class="overlay show"><p>Carregando a praia… <span id="loadpct">0%</span></p></section>
+
+  <section id="menu" class="overlay">
+    <div class="menu-sea"></div>
+    <img class="logo" src="assets/img/logo.png" alt="Wavesson" />
+    <img class="head" src="assets/img/head.png" alt="" />
+    <nav class="buttons">
+      <button data-action="play" class="primary">Jogar</button>
+      <button data-action="daily">Desafio do dia</button>
+      <button data-action="howto">Como jogar</button>
+      <button data-action="credits">Créditos</button>
+    </nav>
+    <p class="best" id="menuBest"></p>
+  </section>
+
+  <section id="howto" class="overlay panel-overlay">
+    <div class="panel">
+      <h2>Como jogar</h2>
+      <p>Você comanda o bonde inteiro de uma vez: <b>WASD / setas</b>, ou arraste o dedo/mouse na tela.
+        A praia rola sozinha. Quem fica pra trás da tela, roda.</p>
+      <ul>
+        <li><b>Chinelo</b> 10 · <b>Celular</b> 100 · <b>Bolsa</b> 200, vezes o tamanho do bonde.</li>
+        <li><b>Gente com “!”</b>: encosta e entra pro bonde.</li>
+        <li><b>Cachorro, salva-vidas e viatura</b>: encostou, perdeu um integrante.</li>
+        <li><b>Guarda-sol, rede, coqueiro, picolé</b>: bloqueiam e empurram.</li>
+        <li><b>Castelo de areia e água rasa</b> atrasam. <b>Água funda</b> leva embora.</li>
+        <li>Quando aparecer <b>ONDA VINDO!</b>, sai da beira do mar.</li>
+        <li>A cada trecho você escolhe 1 de 3 <b>vantagens</b>. Fica mais rápido e mais cheio quanto mais longe.</li>
+      </ul>
+      <p class="keys"><b>P</b>/<b>Esc</b> pausa · <b>M</b> som · <b>1 2 3</b> escolhem vantagem</p>
+      <button data-action="back">Voltar</button>
+    </div>
+  </section>
+
+  <section id="credits" class="overlay panel-overlay">
+    <div class="panel">
+      <h2>Créditos</h2>
+      <p>Criado em janeiro de 2017 numa hackathon pela equipe <b>Wavesson02</b>,
+        no Construct 2. Arte, sprites e trilha são da equipe original.</p>
+      <p>Remake em 2026: port pra HTML5 puro, praia infinita gerada por seed,
+        dificuldade progressiva e vantagens estilo roguelike.</p>
+      <button data-action="back">Voltar</button>
+    </div>
+  </section>
+
+  <section id="perk" class="overlay panel-overlay">
+    <div class="panel wide">
+      <h2>Escolhe a próxima</h2>
+      <div class="cards" id="perkCards"></div>
+    </div>
+  </section>
+
+  <section id="pause" class="overlay panel-overlay">
+    <div class="panel">
+      <h2>Pausado</h2>
+      <button data-action="resume" class="primary">Continuar</button>
+      <button data-action="quit">Sair pro menu</button>
+    </div>
+  </section>
+
+  <section id="gameover" class="overlay panel-overlay">
+    <div class="panel">
+      <h2>O bonde rodou</h2>
+      <div id="summary"></div>
+      <button data-action="again" class="primary">Mais uma (Enter)</button>
+      <button data-action="quit">Menu</button>
+    </div>
+  </section>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "wavesson",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Wavesson: o arrastão roguelike infinito no calçadão",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "start": "python3 -m http.server 5173"
+  }
+}

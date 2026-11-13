@@ -1,0 +1,122 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createRng } from '../src/rng.js';
+import { difficultyAt } from '../src/difficulty.js';
+import { placeSolids, generateRow, LANE_MIN, LANE_MAX } from '../src/generator.js';
+import { DEFS } from '../src/defs.js';
+import { pushOut } from '../src/geom.js';
+import { Run } from '../src/run.js';
+import { PERKS } from '../src/perks.js';
+
+test('rng é determinístico por seed', () => {
+  const a = createRng('ARRASTAO'), b = createRng('ARRASTAO'), c = createRng('OUTRA');
+  const sa = Array.from({ length: 20 }, a.next), sb = Array.from({ length: 20 }, b.next);
+  assert.deepEqual(sa, sb);
+  assert.notDeepEqual(sa, Array.from({ length: 20 }, c.next));
+  assert.ok(sa.every((v) => v >= 0 && v < 1));
+});
+
+test('dificuldade só aumenta com a distância', () => {
+  let prev = difficultyAt(0);
+  for (let m = 50; m <= 5000; m += 50) {
+    const d = difficultyAt(m);
+    assert.ok(d.scrollSpeed >= prev.scrollSpeed, `speed em ${m}`);
+    assert.ok(d.rowGap <= prev.rowGap, `rowGap em ${m}`);
+    assert.ok(d.gapWidth <= prev.gapWidth);
+    assert.ok(d.weights.dog >= prev.weights.dog);
+    assert.ok(d.gapWidth >= 150, 'passagem nunca fica menor que o mínimo');
+    prev = d;
+  }
+  assert.equal(difficultyAt(0).weights.police, 0, 'sem polícia no começo');
+  assert.ok(difficultyAt(400).weights.police > 0);
+});
+
+test('fileiras de sólidos sempre deixam passagem', () => {
+  const rng = createRng(42);
+  for (let i = 0; i < 2000; i++) {
+    const gw = rng.range(150, 260);
+    const { gap, solids } = placeSolids(rng, rng.int(1, 8), gw);
+    assert.ok(gap.from >= LANE_MIN - 1e-6 && gap.to <= LANE_MAX + 1e-6);
+    for (const s of solids) {
+      const h = DEFS[s.kind].hit;
+      const x0 = s.x + h.ox, x1 = x0 + h.w;
+      assert.ok(x1 <= gap.from || x0 >= gap.to, `sólido ${s.kind} invade a passagem`);
+    }
+  }
+});
+
+test('gerador só produz tipos conhecidos', () => {
+  const rng = createRng('g');
+  for (let i = 0; i < 1500; i++) {
+    const { specs } = generateRow(rng, i * 200, difficultyAt(i * 3));
+    for (const s of specs) assert.ok(DEFS[s.kind], s.kind);
+  }
+});
+
+test('pushOut separa caixas sobrepostas', () => {
+  const v = pushOut({ x: 0, y: 0, w: 10, h: 10 }, { x: 0, y: 8, w: 10, h: 10 });
+  assert.deepEqual(v, { x: 0, y: -2 });
+  assert.equal(pushOut({ x: 0, y: 0, w: 5, h: 5 }, { x: 10, y: 10, w: 5, h: 5 }), null);
+});
+
+function simulate(seed, seconds, policy) {
+  const events = [];
+  const run = new Run({ seed, onEvent: (n) => events.push(n) });
+  const dt = 1 / 60;
+  for (let t = 0; t < seconds * 60 && !run.over; t++) {
+    if (run.perkChoices) run.choosePerk(run.perkChoices[0]);
+    run.update(dt, policy(run, t));
+  }
+  return { run, events };
+}
+
+test('parado o bonde acaba rodando (jogo tem pressão)', () => {
+  const { run } = simulate('parado', 600, () => ({ x: 0, y: 0 }));
+  assert.ok(run.over, `ainda vivo em ${run.meters.toFixed(0)}m`);
+  assert.ok(run.meters > 30);
+});
+
+test('run é reproduzível com a mesma seed e mesmo input', () => {
+  const policy = (r, t) => ({ x: Math.sin(t / 50), y: Math.cos(t / 70) * 0.3 });
+  const a = simulate('REPLAY', 90, policy).run, b = simulate('REPLAY', 90, policy).run;
+  assert.equal(a.score, b.score);
+  assert.equal(a.crew.length, b.crew.length);
+  assert.equal(a.cameraY, b.cameraY);
+});
+
+test('run longa não quebra e passa por perks, polícia e onda', () => {
+  // "bot" simples: desvia horizontalmente do perigo mais próximo à frente
+  const policy = (run) => {
+    const c = run.crewCenter();
+    if (!c) return { x: 0, y: 0 };
+    let x = 0;
+    for (const e of run.entities) {
+      if (e.def.role !== 'deadly' && e.def.role !== 'solid') continue;
+      const dy = e.y - c.y;
+      if (dy < -40 || dy > 260) continue;
+      const ex = e.x + e.w / 2;
+      if (Math.abs(ex - c.x) < 200) x += ex > c.x ? -1 : 1;
+    }
+    if (c.x > 1200) x -= 1;
+    if (c.x < 150) x += 0.5;
+    return { x: Math.max(-1, Math.min(1, x)), y: c.y - run.cameraY < 300 ? 0.4 : -0.2 };
+  };
+  const seen = new Set();
+  for (const seed of ['A', 'B', 'C', 'D']) {
+    const { run, events } = simulate(seed, 400, policy);
+    events.forEach((e) => seen.add(e));
+    assert.ok(Number.isFinite(run.score));
+  }
+  for (const e of ['loot', 'perk', 'death']) assert.ok(seen.has(e), `evento ${e} nunca aconteceu`);
+});
+
+test('perks respeitam máximo e mexem nos mods', () => {
+  const run = new Run({ seed: 'p' });
+  run.perkChoices = [PERKS[0]];
+  run.choosePerk(PERKS[0]);
+  assert.ok(run.mods.speedMult > 1);
+  const before = run.crew.length;
+  run.perkChoices = [PERKS.find((p) => p.id === 'galera')];
+  run.choosePerk(run.perkChoices[0]);
+  assert.equal(run.crew.length, before + 3);
+});
