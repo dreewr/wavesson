@@ -2,6 +2,8 @@
 
 import { VIEW_W, VIEW_H, ZONE, CREW } from './config.js';
 import { CREW_SKINS } from './defs.js';
+import { PERKS as PERK_LIST } from './perks.js';
+import { RUSH } from './run.js';
 
 const SEA_X = 610; // onde o sprite do mar (1024px) começa, como no layout original
 const DEEP_BLUE = '#10298f';
@@ -209,14 +211,22 @@ export function createRenderer(canvas, images) {
     ctx.beginPath();
     ctx.ellipse(m.x + CREW.w / 2, sy + CREW.h - 2, 18, 6, 0, 0, Math.PI * 2);
     ctx.fill();
+    if (m.dashing) {
+      ctx.globalAlpha = 0.3;
+      ctx.drawImage(img, m.x, sy - 24, CREW.w, CREW.h);
+      ctx.globalAlpha = 0.15;
+      ctx.drawImage(img, m.x, sy - 48, CREW.w, CREW.h);
+      ctx.globalAlpha = 1;
+    }
     ctx.drawImage(img, m.x, sy, CREW.w, CREW.h);
     if (m.slowT > 0) label('~', m.x + CREW.w / 2, sy - 4, '#8d6e3f', 28);
+
   }
 
   // ------------------------------------------------------------ HUD
 
   function label(text, x, y, color = '#fff', size = 28, stroke = '#000', align = 'center') {
-    ctx.font = `700 ${size}px Arial, Helvetica, sans-serif`;
+    ctx.font = `700 ${size}px Kalam, "Comic Sans MS", cursive`;
     ctx.textAlign = align;
     ctx.lineJoin = 'round';
     ctx.lineWidth = Math.max(3, size / 6);
@@ -226,49 +236,210 @@ export function createRenderer(canvas, images) {
     ctx.fillText(text, x, y);
   }
 
-  // HUD no layout do original: rótulos em Arial negrito preto no topo central
-  // ("Pontos:", "Wavessons:", "Distância:") com os valores ao lado.
-  // Melhorias: contorno branco pra ler em cima de guarda-sol, multiplicador,
-  // nome da praia, escudos e a barra até a próxima vantagem.
-  function hudText(text, x, y, { bold = false, size = 32, align = 'left', color = '#000' } = {}) {
-    ctx.font = `${bold ? 700 : 400} ${size}px Arial, Helvetica, sans-serif`;
+  // HUD: a estrutura do original de 2017 (Pontos / Wavessons / Distância, no
+  // topo central, rótulo à esquerda e valor à direita) num "bilhete" de papel
+  // com a letra manuscrita dos menus. Em volta: combo, vantagens, pique, escudos.
+  const HAND = 'Kalam, "Comic Sans MS", "Chalkboard SE", cursive';
+  const INK = '#333';
+  const BLUE = '#3a3d9b';
+  const PAPER = '#fffdf2';
+
+  function text(t, x, y, { size = 28, weight = 700, color = INK, align = 'left', stroke = null, italic = false } = {}) {
+    ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px ${HAND}`;
     ctx.textAlign = align;
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-    ctx.strokeText(text, x, y);
+    if (stroke) {
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = Math.max(4, size / 6);
+      ctx.strokeStyle = stroke;
+      ctx.strokeText(t, x, y);
+    }
     ctx.fillStyle = color;
-    ctx.fillText(text, x, y);
+    ctx.fillText(t, x, y);
+    return ctx.measureText(t).width;
+  }
+
+  function paper(x, y, w, h, rot = 0) {
+    ctx.save();
+    ctx.translate(x + w / 2, y + h / 2);
+    ctx.rotate(rot);
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.fillRect(-w / 2 + 6, -h / 2 + 6, w, h);
+    ctx.fillStyle = PAPER;
+    ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-w / 2, -h / 2, w, h);
+    ctx.restore();
+  }
+
+  function wave(x0, x1, y, amp, color, width, upto = 1) {
+    ctx.beginPath();
+    const end = x0 + (x1 - x0) * upto;
+    for (let x = x0; x <= end; x += 4) {
+      const yy = y + Math.sin((x - x0) / 14) * amp;
+      x === x0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  const fmt = (n) => Math.floor(n).toLocaleString('pt-BR');
+
+  function drawCard(run) {
+    const X = 620, Y = 12, W = 500, H = 196;
+    paper(X, Y, W, H, -0.012);
+    const LX = 800, VX = 816;
+    text('Pontos:', LX, 62, { align: 'right', size: 30 });
+    text(fmt(run.score), VX, 64, { size: 40, color: '#000' });
+
+    text('Wavessons:', LX, 112, { align: 'right', size: 30 });
+    const nW = text(String(run.crew.length), VX, 114, { size: 36, color: '#000' });
+    // carinhas do bando
+    const heads = Math.min(run.crew.length, 10);
+    for (let i = 0; i < heads; i++) {
+      const skin = CREW_SKINS[run.crew[i].skin];
+      ctx.drawImage(images[`${skin}_0`], 0, 0, 34, 40, VX + nW + 10 + i * 17, 84, 15, 18);
+    }
+    if (run.crew.length > 10) text('+', VX + nW + 12 + heads * 17, 102, { size: 22 });
+    text(`×${run.crewMult.toFixed(2).replace('.', ',')}`, VX + nW + 12, 128, { size: 18, color: BLUE, weight: 400 });
+
+    text('Distância:', LX, 162, { align: 'right', size: 30 });
+    const dW = text(`${Math.floor(run.meters)} m`, VX, 164, { size: 34, color: '#000' });
+    text(run.biome.name, VX + dW + 12, 162, { size: 22, color: BLUE, weight: 400 });
+
+    // a "onda" até a próxima vantagem
+    const prevAt = run.nextPerkAt - run.perkStep;
+    const p = Math.max(0, Math.min(1, (run.meters - prevAt) / (run.nextPerkAt - prevAt)));
+    wave(650, 1050, 186, 4, 'rgba(58,61,155,0.22)', 4);
+    wave(650, 1050, 186, 4, BLUE, 6, p);
+    text('★', 1070, 196, { size: 26, color: p >= 0.95 ? '#e6a700' : 'rgba(58,61,155,0.5)', weight: 400 });
+  }
+
+  function drawCombo(run) {
+    if (run.combo.n < 2) return;
+    const x = 1185, y = 70;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(0.06);
+    const pop = 1 + Math.max(0, run.combo.t - 1.9) * 0.6;
+    ctx.scale(pop, pop);
+    text('combo', 0, 0, { size: 26, color: INK, stroke: '#fff' });
+    text(`×${run.comboMult.toFixed(1).replace('.', ',')}`, 0, 44, { size: 48, color: BLUE, stroke: '#fff', italic: true });
+    // o risco embaixo some junto com a janela do combo
+    ctx.fillStyle = BLUE;
+    ctx.fillRect(0, 56, 110 * (run.combo.t / 2.2), 5);
+    ctx.restore();
+  }
+
+  function drawSide(run, best) {
+    // recorde + vantagens pegas, em etiquetinhas de papel no canto direito
+    let y = 18;
+    const tag = (t, color = INK, size = 20) => {
+      ctx.font = `700 ${size}px ${HAND}`;
+      const w = ctx.measureText(t).width + 22;
+      paper(VIEW_W - 18 - w, y, w, size + 14, 0.01);
+      text(t, VIEW_W - 29, y + size + 4, { size, color, align: 'right' });
+      y += size + 22;
+    };
+    if (best > 0) tag(`recorde ${fmt(best)}`, '#777', 18);
+    for (const p of PERK_LIST) {
+      const lvl = run.taken[p.id];
+      if (lvl) tag(lvl > 1 ? `${p.name} ×${lvl}` : p.name, BLUE, 18);
+    }
+  }
+
+  function drawShields(run) {
+    const n = Math.min(run.mods.shields, 12);
+    if (!n) return;
+    const x0 = 870 - (n * 22) / 2;
+    for (let i = 0; i < n; i++) {
+      const x = x0 + i * 22, y = 228;
+      ctx.beginPath();
+      ctx.moveTo(x, y - 9); ctx.lineTo(x + 8, y); ctx.lineTo(x, y + 9); ctx.lineTo(x - 8, y); ctx.closePath();
+      ctx.fillStyle = '#7fd3ff';
+      ctx.fill();
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    if (run.mods.shields > 12) text('+', x0 + 12 * 22, 236, { size: 22 });
+  }
+
+  function drawDash(run) {
+    const ready = run.dash.cd === 0;
+    const X = 20, Y = 628, W = 210, H = 74;
+    paper(X, Y, W, H, 0.015);
+    const p = 1 - run.dash.cd / run.dashCooldown;
+    text(ready ? 'PIQUE!' : 'pique', X + 16, Y + 38, { size: 30, color: ready ? BLUE : '#999', italic: ready });
+    text('espaço', X + W - 14, Y + 36, { size: 16, color: '#999', weight: 400, align: 'right' });
+    ctx.fillStyle = 'rgba(58,61,155,0.15)';
+    ctx.fillRect(X + 16, Y + 50, W - 32, 9);
+    ctx.fillStyle = ready ? BLUE : '#888';
+    ctx.fillRect(X + 16, Y + 50, (W - 32) * p, 9);
+  }
+
+  function drawRush(run) {
+    if (run.rush.t <= 0) return;
+    const elapsed = RUSH.seconds - run.rush.t;
+    if (elapsed < 2) {
+      // anúncio grande, some pra não tapar o bando
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, (2 - elapsed) * 2);
+      ctx.translate(VIEW_W / 2, 300);
+      ctx.rotate(Math.sin(run.time * 6) * 0.03);
+      const s = 1 + Math.max(0, 0.3 - elapsed) * 1.5;
+      ctx.scale(s, s);
+      text('HORA DO ARRASTÃO!', 0, 0, { size: 60, color: BLUE, stroke: '#fff', align: 'center', italic: true });
+      text('pontos em dobro', 0, 38, { size: 26, color: INK, stroke: '#fff', align: 'center' });
+      ctx.restore();
+    }
+    // lembrete compacto embaixo do bilhete
+    paper(760, 246, 220, 40, 0.02);
+    text(`Hora do Arrastão · ${Math.ceil(run.rush.t)}s`, 870, 274, { size: 21, color: BLUE, align: 'center' });
+  }
+
+  function drawDanger(run) {
+    const danger = run.inDanger;
+    if (!danger.length) return;
+    const a = 0.25 + Math.sin(run.time * 14) * 0.12;
+    const g = ctx.createLinearGradient(0, 0, 0, 120);
+    g.addColorStop(0, `rgba(229,57,53,${a})`);
+    g.addColorStop(1, 'rgba(229,57,53,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, VIEW_W, 120);
+  }
+
+  // quem está quase saindo por cima ganha um alerta, desenhado por cima da HUD
+  function drawDangerMarks(run) {
+    const blink = Math.floor(run.time * 10) % 2 === 0;
+    for (const m of run.inDanger) {
+      const sy = m.y - run.cameraY;
+      label(blink ? '!' : '↓', m.x + CREW.w / 2, Math.max(30, sy + CREW.h + 30), '#e53935', 36, '#fff');
+    }
+  }
+
+  function crewUnder(run, x0, y0, x1, y1) {
+    return run.crew.some((m) => {
+      const sy = m.y - run.cameraY;
+      return m.x + CREW.w > x0 && m.x < x1 && sy < y1 && sy + CREW.h > y0;
+    });
   }
 
   function drawHud(run, best) {
-    const LX = 878, VX = 928; // colunas do layout Track de 2017
-    hudText('Pontos:', LX, 80, { bold: true, align: 'right' });
-    hudText(Math.floor(run.score).toLocaleString('pt-BR'), VX, 80);
-    hudText('Wavessons:', LX, 130, { bold: true, align: 'right' });
-    hudText(String(run.crew.length), VX, 130);
-    const crewW = ctx.measureText(String(run.crew.length)).width;
-    hudText(`×${run.crewMult.toFixed(2).replace('.', ',')}`, VX + crewW + 14, 130, { size: 22, color: '#3a3d9b' });
-    hudText('Distância:', LX, 180, { bold: true, align: 'right' });
-    hudText(`${Math.floor(run.meters)} m`, VX, 180);
-    const distW = ctx.measureText(`${Math.floor(run.meters)} m`).width;
-    hudText(run.biome.name, VX + distW + 14, 180, { size: 22, color: '#3a3d9b' });
-
-    // barra fina até a próxima vantagem, logo abaixo
-    const prevAt = run.nextPerkAt - run.perkStep;
-    const p = Math.max(0, Math.min(1, (run.meters - prevAt) / (run.nextPerkAt - prevAt)));
-    const bx = 678, bw = 420, by = 198;
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.fillRect(bx - 2, by - 2, bw + 4, 10);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(bx, by, bw * p, 6);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(bx, by, bw, 6);
-
-    const shields = run.mods.shields;
-    if (shields) hudText(`Escudos: ${'◆'.repeat(Math.min(shields, 8))}${shields > 8 ? '+' : ''}`, VX, 232, { size: 22, color: '#1565c0' });
-    if (best > 0) hudText(`Recorde: ${Math.floor(best).toLocaleString('pt-BR')}`, VIEW_W - 24, 40, { size: 22, align: 'right', color: '#444' });
+    drawDanger(run);
+    // o bilhete fica translúcido quando tem gente do bando passando por baixo
+    ctx.globalAlpha = crewUnder(run, 615, 0, 1125, 212) ? 0.35 : 1;
+    drawCard(run);
+    drawShields(run);
+    ctx.globalAlpha = 1;
+    drawCombo(run);
+    drawSide(run, best);
+    drawDash(run);
+    drawRush(run);
+    ctx.globalAlpha = 1;
+    drawDangerMarks(run);
   }
 
   function roundRect(x, y, w, h, r) {

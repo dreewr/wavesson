@@ -234,3 +234,20 @@ button.ink:hover, button.ink:focus-visible { color: var(--blue); text-decoration
   #summary .big { font-size: 40px; }
   #summary table { font-size: 18px; }
 }
+
+/* ------------------------------------------------------------ toque */
+#touch { display: none; }
+@media (pointer: coarse) {
+  body.playing #touch { display: block; }
+}
+#touch button {
+  position: fixed;
+  font: 700 22px var(--hand);
+  color: var(--ink);
+  background: #fffdf2;
+  border: 3px solid var(--ink);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+  touch-action: none;
+}
+#touchDash { right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); width: 110px; height: 110px; border-radius: 50%; color: var(--blue); }
+#touchPause { right: max(16px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); width: 52px; height: 52px; border-radius: 8px; }

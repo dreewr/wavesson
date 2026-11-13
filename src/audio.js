@@ -88,7 +88,10 @@ export function createAudio() {
   const play = (a) => { if (!muted) a.play().catch(() => {}); };
 
   const sfx = {
-    loot: (kind) => tone(kind === 'flipflop' ? 660 : kind === 'phone' ? 880 : 990, 0.09, { slide: 400 }),
+    // o tom sobe junto com o combo
+    loot: (kind, combo = 1) => tone((kind === 'flipflop' ? 660 : kind === 'phone' ? 880 : 990) * Math.pow(1.06, Math.min(combo - 1, 12)), 0.09, { slide: 400 }),
+    dash: () => tone(300, 0.18, { type: 'triangle', slide: 500, vol: 0.09 }),
+    rush: () => { if (!muted) { gas.currentTime = 0; gas.play().catch(() => {}); } [659, 784, 988, 1319].forEach((f, i) => tone(f, 0.14, { delay: 0.5 + i * 0.08, type: 'square', vol: 0.06 })); },
     recruit: () => { tone(523, 0.08); tone(784, 0.12, { delay: 0.08 }); },
     death: () => tone(220, 0.25, { type: 'sawtooth', slide: -150, vol: 0.1 }),
     shield: () => tone(1200, 0.15, { type: 'triangle', slide: -600, vol: 0.1 }),

@@ -126,7 +126,9 @@ const PATTERNS = {
 export const PATTERN_NAMES = Object.keys(PATTERNS);
 
 export function generateRow(rng, y, diff, opts = {}) {
-  const weights = { ...diff.weights };
+  const weights = opts.rush
+    ? { loot: 6, recruit: 2.2, castles: 1.2, solids: 1.5, dog: 0.4 } // Hora do Arrastão: fartura
+    : { ...diff.weights };
   if (opts.recruitBoost) weights.recruit *= opts.recruitBoost;
   const pattern = rng.weighted(weights);
   const specs = PATTERNS[pattern](rng, y, diff);

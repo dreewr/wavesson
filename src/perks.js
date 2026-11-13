@@ -12,6 +12,7 @@ export function baseMods() {
     surfer: false, // correnteza empurra em vez de matar
     warnBonus: 0, // segundos extras de aviso (polícia/onda)
     recruitBoost: 1,
+    dashCdMult: 1, // recarga do pique
   };
 }
 
@@ -24,6 +25,7 @@ export const PERKS = [
   { id: 'chinelo', name: 'Chinelo de Borracha', desc: 'Castelo de areia e água rasa não atrasam mais.', max: 1, apply: (m) => { m.slowImmune = true; } },
   { id: 'petisco', name: 'Petisco no Bolso', desc: 'Cachorros 30% mais lentos.', max: 2, apply: (m) => { m.dogSlow *= 0.7; } },
   { id: 'surfista', name: 'Fôlego de Surfista', desc: 'A correnteza joga de volta na areia em vez de levar.', max: 1, apply: (m) => { m.surfer = true; } },
+  { id: 'folego', name: 'Fôlego de Maratonista', desc: 'O pique recarrega 30% mais rápido.', max: 2, apply: (m) => { m.dashCdMult *= 0.7; } },
   { id: 'olheiro', name: 'Olheiro', desc: 'Avisos de polícia e onda chegam antes; mais gente pra recrutar.', max: 2, apply: (m) => { m.warnBonus += 0.6; m.recruitBoost += 0.8; } },
 ];
 

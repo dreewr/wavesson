@@ -12,6 +12,16 @@ import { overlaps, pushOut, box, clamp, center } from './geom.js';
 
 const TIDE = { warn: 1.8, surge: 1.1, hold: 1.6, recede: 2.2 };
 
+// Pique: arrancada curta na direção do input (pra frente se parado),
+// com um fiapo de invulnerabilidade. Principal ferramenta contra "ficou pra trás".
+export const DASH = { duration: 0.24, cooldown: 3.2, mult: 3.4 };
+// Combo: itens pegos em sequência rápida multiplicam os pontos.
+export const COMBO = { window: 2.2, step: 0.1, max: 3 };
+// Hora do Arrastão: ao chegar numa praia nova, alguns segundos de fartura.
+export const RUSH = { seconds: 9, lootMult: 2 };
+// Margem (px) do topo da tela em que o integrante já está em perigo.
+export const DANGER_MARGIN = 70;
+
 export class Run {
   constructor({ seed, onEvent = () => {} }) {
     this.seed = seed;
@@ -37,6 +47,9 @@ export class Run {
     this.nextTideAt = Infinity;
     this.biomeIndex = 0;
     this.diff = difficultyAt(0);
+    this.dash = { t: 0, cd: 0 };
+    this.combo = { n: 0, t: 0, best: 0 };
+    this.rush = { t: 0, fromY: -1, toY: -1 };
 
     // formação inicial, parecida com a do layout Track de 2017
     for (let i = 0; i < CREW.startSize; i++) {
@@ -46,6 +59,19 @@ export class Run {
 
   get meters() {
     return this.cameraY / PX_PER_METER;
+  }
+
+  get comboMult() {
+    return Math.min(COMBO.max, 1 + COMBO.step * Math.max(0, this.combo.n - 1));
+  }
+
+  get dashCooldown() {
+    return DASH.cooldown * this.mods.dashCdMult;
+  }
+
+  // pra HUD: integrantes perto de serem deixados pra trás
+  get inDanger() {
+    return this.crew.filter((m) => m.y - this.cameraY < DANGER_MARGIN);
   }
 
   get crewMult() {
@@ -104,6 +130,17 @@ export class Run {
     this.cameraY += diff.scrollSpeed * dt;
     this.score += (this.meters - before) * this.mods.scoreMult;
 
+    this.dash.t = Math.max(0, this.dash.t - dt);
+    this.dash.cd = Math.max(0, this.dash.cd - dt);
+    if (input.dash && this.dash.cd === 0) {
+      this.dash.t = DASH.duration;
+      this.dash.cd = this.dashCooldown;
+      this.emit('dash');
+    }
+    this.combo.t = Math.max(0, this.combo.t - dt);
+    if (this.combo.t === 0) this.combo.n = 0;
+    this.rush.t = Math.max(0, this.rush.t - dt);
+
     this.spawnAhead();
     this.updateTide(dt, diff);
     this.updateEntities(dt, diff);
@@ -114,6 +151,7 @@ export class Run {
     if (biome !== this.biomeIndex) {
       this.biomeIndex = biome;
       this.emit('biome', this.biome);
+      this.startRush(diff);
     }
 
     if (!this.crew.length) {
@@ -128,10 +166,25 @@ export class Run {
     }
   }
 
+  startRush(diff) {
+    this.rush.t = RUSH.seconds;
+    // as fileiras ainda não geradas dentro da janela da Hora viram fartura
+    this.rush.fromY = this.nextRowY;
+    this.rush.toY = this.cameraY + VIEW_H + diff.scrollSpeed * RUSH.seconds;
+    this.emit('rush');
+  }
+
+  // bando pequeno → mais gente pra recrutar (evita run morta sem volta)
+  get recruitBoost() {
+    const n = this.crew.length;
+    return this.mods.recruitBoost * (n <= 2 ? 2.6 : n <= 4 ? 1.6 : 1);
+  }
+
   spawnAhead() {
     while (this.nextRowY < this.cameraY + VIEW_H + 400) {
       const diff = difficultyAt(this.nextRowY / PX_PER_METER);
-      const { specs } = generateRow(this.rng, this.nextRowY, diff, { recruitBoost: this.mods.recruitBoost });
+      const rush = this.nextRowY >= this.rush.fromY && this.nextRowY < this.rush.toY;
+      const { specs } = generateRow(this.rng, this.nextRowY, diff, { recruitBoost: this.recruitBoost, rush });
       for (const s of specs) this.spawn(s, diff);
       this.nextRowY += diff.rowGap * this.rng.range(0.8, 1.2);
     }
@@ -261,7 +314,11 @@ export class Run {
     const len = Math.hypot(input.x, input.y);
     const ix = len > 1 ? input.x / len : input.x;
     const iy = len > 1 ? input.y / len : input.y;
-    const speed = CREW.speed * this.mods.speedMult;
+    const dashing = this.dash.t > 0;
+    const speed = CREW.speed * this.mods.speedMult * (dashing ? DASH.mult : 1);
+    // pique sem direção = arrancada pra frente (pra baixo)
+    const dx = dashing && len < 0.1 ? 0 : ix;
+    const dy = dashing && len < 0.1 ? 1 : iy;
     const water = this.waterline;
 
     for (const m of this.crew) {
@@ -271,11 +328,12 @@ export class Run {
       const inShallow = m.x + CREW.w / 2 > water.shallow;
       const slowed = !this.mods.slowImmune && (m.slowT > 0 || inShallow);
       const f = slowed ? 0.5 : 1;
-      m.x += ix * speed * f * dt;
-      m.y += (diff.scrollSpeed * (slowed ? 0.8 : 1) + iy * speed * f) * dt;
+      m.x += dx * speed * f * dt;
+      m.y += (diff.scrollSpeed * (slowed ? 0.8 : 1) + dy * speed * f) * dt;
       m.x = clamp(m.x, 0, VIEW_W - CREW.w);
       m.y = Math.min(m.y, this.cameraY + VIEW_H - CREW.h - 4);
-      m.moving = len > 0.1;
+      m.moving = len > 0.1 || dashing;
+      m.dashing = dashing;
     }
 
     this.separate();
@@ -335,10 +393,14 @@ export class Run {
         this.emit('crumble', e);
       } else if (role === 'loot') {
         e.dead = true;
-        const pts = Math.round(e.def.points * this.mods.scoreMult * this.crewMult);
+        this.combo.n = this.combo.t > 0 ? this.combo.n + 1 : 1;
+        this.combo.t = COMBO.window;
+        this.combo.best = Math.max(this.combo.best, this.combo.n);
+        const rushMult = this.rush.t > 0 ? RUSH.lootMult : 1;
+        const pts = Math.round(e.def.points * this.mods.scoreMult * this.crewMult * this.comboMult * rushMult);
         this.score += pts;
         this.loot[e.kind]++;
-        this.emit('loot', { kind: e.kind, pts, x: e.x, y: e.y });
+        this.emit('loot', { kind: e.kind, pts, x: e.x, y: e.y, combo: this.combo.n });
       } else if (role === 'recruit') {
         e.dead = true;
         this.addMember(e.x, e.y, e.skin);
@@ -350,7 +412,7 @@ export class Run {
 
   // Retorna true se o integrante saiu do bonde.
   kill(m, cause) {
-    if (m.invulnT > 0 && cause !== 'left') return false;
+    if ((m.invulnT > 0 || this.dash.t > 0) && cause !== 'left') return false;
     if (this.mods.shields > 0 && cause !== 'left') {
       this.mods.shields--;
       m.invulnT = CREW.invulnAfterShield;

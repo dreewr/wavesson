@@ -30,6 +30,7 @@ let bestScore = 0;
 function show(id) {
   for (const el of document.querySelectorAll('.screen, .overlay')) el.classList.toggle('show', el.id === id);
   document.body.classList.toggle('in-menu', !!document.querySelector('.screen.show'));
+  document.body.classList.toggle('playing', !id);
   screen = id ?? 'game';
 }
 
@@ -59,7 +60,9 @@ function updateMenuBest() {
 function onEvent(name, data) {
   const s = audio.sfx;
   switch (name) {
-    case 'loot': s.loot(data.kind); renderer.float(`+${data.pts}`, data.x + 20, data.y, '#ffe14d'); break;
+    case 'loot': s.loot(data.kind, data.combo); renderer.float(`+${data.pts}`, data.x + 20, data.y, data.combo > 1 ? '#7fd3ff' : '#ffe14d'); break;
+    case 'dash': s.dash(); break;
+    case 'rush': s.rush(); break;
     case 'recruit': if (data.n > 1) s.gas(); else s.recruit(); if (data.x != null) renderer.float('+1 Wavesson', data.x + 17, data.y, '#9cff8a', 24); break;
     case 'death': s.death(); renderer.shake(14); renderer.float('rodou!', data.x + 17, data.y + 30, '#ff5252', 26); break;
     case 'shield': s.shield(); renderer.float('livrou!', data.x + 17, data.y, '#7fe3ff', 26); break;
@@ -75,6 +78,7 @@ function onEvent(name, data) {
 }
 
 function startRun(seed = randomSeed()) {
+  document.activeElement?.blur?.();
   run = new Run({ seed, onEvent });
   paused = false;
   audio.startGame();
@@ -116,6 +120,7 @@ function openGameOver() {
       <tr><td>Distância</td><td>${Math.floor(run.meters)} m (${run.biome.name})</td></tr>
       <tr><td>Maior bando</td><td>${run.maxCrew}</td></tr>
       <tr><td>Recrutados</td><td>${run.recruited}</td></tr>
+      <tr><td>Maior combo</td><td>×${run.combo.best}</td></tr>
       <tr><td>Celulares / bolsas / chinelos</td><td>${run.loot.phone} / ${run.loot.bag} / ${run.loot.flipflop}</td></tr>
       ${deaths}
       <tr><td>Seed</td><td>${run.seed}</td></tr>
@@ -191,6 +196,10 @@ async function boot() {
   const images = await loadImages((p) => { $('loadpct').textContent = `${Math.round(p * 100)}%`; });
   renderer = createRenderer(canvas, images);
   input = createInput(canvas);
+  $('touchDash').addEventListener('pointerdown', (e) => { e.preventDefault(); input.queueDash(); });
+  $('touchPause').addEventListener('pointerdown', (e) => { e.preventDefault(); togglePause(); });
+  // a HUD do canvas usa a mesma letra dos menus; espera a fonte (no máx. 1,5 s)
+  await Promise.race([document.fonts?.load('700 30px Kalam') ?? Promise.resolve(), new Promise((r) => setTimeout(r, 1500))]).catch(() => {});
   bindUi();
   updateMenuBest();
 

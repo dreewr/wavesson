@@ -146,3 +146,71 @@ test('surfista só aparece depois do primeiro trecho', () => {
   assert.equal(difficultyAt(0).weights.surfer, 0);
   assert.ok(difficultyAt(200).weights.surfer > 0);
 });
+
+test('pique arranca pra frente e dá um respiro de invulnerabilidade', async () => {
+  const { DASH } = await import('../src/run.js');
+  const run = new Run({ seed: 'dash' });
+  run.entities = [];
+  run.nextRowY = Infinity;
+  const y0 = run.crew[0].y - run.cameraY;
+  run.update(1 / 60, { x: 0, y: 0, dash: true });
+  for (let i = 0; i < 10; i++) run.update(1 / 60, { x: 0, y: 0 });
+  assert.ok(run.crew[0].y - run.cameraY > y0 + 60, 'pique parado deveria jogar o bando pra frente');
+  assert.ok(run.dash.cd > 0, 'pique entra em recarga');
+  // durante o pique, perigo não derruba
+  run.dash.t = DASH.duration;
+  assert.equal(run.kill(run.crew[0], 'dog'), false);
+  // mas ficar pra trás sim
+  assert.equal(run.kill(run.crew[0], 'left'), true);
+  // não dá pra repicar em recarga
+  const cd = run.dash.cd;
+  run.update(1 / 60, { x: 0, y: 0, dash: true });
+  assert.ok(run.dash.cd < cd);
+});
+
+test('combo cresce com itens seguidos e zera depois da janela', async () => {
+  const { COMBO } = await import('../src/run.js');
+  const run = new Run({ seed: 'combo' });
+  run.entities = [];
+  run.nextRowY = Infinity;
+  const m = run.crew[0];
+  const pts = [];
+  for (let i = 0; i < 4; i++) {
+    run.spawn({ kind: 'phone', x: m.x, y: m.y + 30 }, difficultyAt(0));
+    const before = run.score;
+    run.touch(m);
+    pts.push(run.score - before);
+  }
+  assert.equal(run.combo.n, 4);
+  assert.ok(pts[3] > pts[0], 'combo multiplica os pontos');
+  for (let i = 0; i < 60 * (COMBO.window + 0.5); i++) run.update(1 / 60, { x: 0, y: 0 });
+  assert.equal(run.combo.n, 0);
+});
+
+test('praia nova dispara a Hora do Arrastão, com fileiras de fartura', () => {
+  const events = [];
+  const run = new Run({ seed: 'rush', onEvent: (n) => events.push(n) });
+  run.mods.shields = 1e9;
+  run.nextPerkAt = Infinity;
+  run.cameraY = 399.5 * 100;
+  run.crew.forEach((m) => (m.y = run.cameraY + 300));
+  run.nextRowY = run.cameraY + 720;
+  for (let i = 0; i < 30; i++) run.update(1 / 60, { x: 0, y: 0 });
+  assert.ok(events.includes('rush'));
+  assert.ok(run.rush.t > 0);
+  const rng = createRng('fartura');
+  const counts = {};
+  for (let i = 0; i < 400; i++) {
+    const { pattern } = generateRow(rng, i * 200, difficultyAt(1000), { rush: true });
+    counts[pattern] = (counts[pattern] || 0) + 1;
+  }
+  assert.ok(!counts.police && !counts.lifeguard && !counts.surfer, 'sem perigos pesados na Hora');
+  assert.ok(counts.loot > 150);
+});
+
+test('bando pequeno ganha mais chance de recrutar', () => {
+  const run = new Run({ seed: 'rb' });
+  const full = run.recruitBoost;
+  run.crew.length = 2;
+  assert.ok(run.recruitBoost > full * 2);
+});

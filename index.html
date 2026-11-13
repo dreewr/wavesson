@@ -51,20 +51,19 @@
         <div class="cols">
           <div>
             <p class="big">A praia agora não acaba.<br />Quanto mais longe, mais rápido<br />e mais cheio fica.</p>
-            <p>A cada trecho você escolhe <b>1 de 3 vantagens</b>.<br />Bando maior = pontos multiplicados.</p>
+            <p>A cada trecho: <b>1 de 3 vantagens</b>.<br />Bando grande e <b>combo</b> multiplicam pontos.<br />Praia nova = <b>Hora do Arrastão</b>!</p>
           </div>
           <div class="list">
-            <p><b>Surfista Desatento</b><span>Finalmente saiu do papel! Sai do mar e atravessa</span></p>
-            <p><b>Viatura</b><span>Perde um personagem · sirene avisa antes</span></p>
-            <p><b>Onda</b><span>A água avança · saia da beira!</span></p>
-            <p><b>Água funda</b><span>A correnteza leva</span></p>
+            <p><b>Surfista Desatento</b><span>Saiu do papel! Atravessa a praia</span></p>
+            <p><b>Viatura</b><span>A sirene avisa antes</span></p>
+            <p><b>Onda · Água funda</b><span>Saia da beira do mar!</span></p>
             <p><b>Galera com “!”</b><span>Encosta e entra pro bando</span></p>
           </div>
           <div class="list">
-            <p><b>Chinelo</b><span>10 pts</span></p>
-            <p><b>Celular</b><span>100 pts</span></p>
-            <p><b>Bolsa</b><span>200 pts</span></p>
-            <p><b>WASD · arrastar</b><span>também movem · M liga/desliga o som</span></p>
+            <p><b>PIQUE · Espaço</b><span>Arrancada: ninguém te pega</span></p>
+            <p><b>Chinelo · Celular · Bolsa</b><span>10 · 100 · 200 pontos</span></p>
+            <p><b>WASD · arrastar</b><span>também movem o bando</span></p>
+            <p><b>M</b><span>liga/desliga o som</span></p>
           </div>
         </div>
       </div>
@@ -89,6 +88,12 @@
       <div class="menu-sea"></div>
       <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
     </section>
+  </div>
+
+  <!-- Botões de toque (só aparecem em tela sensível ao toque, durante o jogo) -->
+  <div id="touch">
+    <button id="touchPause" aria-label="Pausar">II</button>
+    <button id="touchDash">PIQUE</button>
   </div>
 
   <!-- Janelas sobre o jogo -->

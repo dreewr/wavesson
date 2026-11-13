@@ -1,5 +1,5 @@
 // Teclado (WASD / setas) + toque/mouse como joystick virtual
-// (arraste a partir de onde encostou).
+// (arraste a partir de onde encostou). Espaço/Shift ou o botão PIQUE = arrancada.
 
 const KEYS = {
   ArrowLeft: [-1, 0], KeyA: [-1, 0],
@@ -10,10 +10,17 @@ const KEYS = {
 
 export function createInput(canvas, toWorldScale) {
   const down = new Set();
+  let dashQueued = false;
   const stick = { active: false, ox: 0, oy: 0, x: 0, y: 0, id: null };
 
   addEventListener('keydown', (e) => {
     if (KEYS[e.code]) { down.add(e.code); e.preventDefault(); }
+    // só durante o jogo (foco no body); em menus o Espaço continua apertando botão
+    const free = e.target === document.body || e.target === canvas;
+    if (free && (e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat) {
+      dashQueued = true;
+      e.preventDefault();
+    }
   });
   addEventListener('keyup', (e) => down.delete(e.code));
   addEventListener('blur', () => down.clear());
@@ -39,12 +46,15 @@ export function createInput(canvas, toWorldScale) {
 
   return {
     stick,
+    queueDash() { dashQueued = true; },
     read() {
       let x = 0, y = 0;
       for (const code of down) { x += KEYS[code][0]; y += KEYS[code][1]; }
       x = Math.max(-1, Math.min(1, x + stick.x));
       y = Math.max(-1, Math.min(1, y + stick.y));
-      return { x, y };
+      const dash = dashQueued;
+      dashQueued = false;
+      return { x, y, dash };
     },
   };
 }

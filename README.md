@@ -14,7 +14,8 @@ npm start   # python3 -m http.server 5173
 
 Abra http://localhost:5173. Sem build, sem dependências. `?seed=QUALQUERCOISA` fixa a praia.
 
-**Controles:** WASD/setas ou arrastar na tela · `P`/`Esc` pausa · `M` som · `1 2 3` escolhem vantagem.
+**Controles:** WASD/setas ou arrastar na tela · `Espaço`/`Shift` pique · `P`/`Esc` pausa · `M` som · `1 2 3` escolhem vantagem.
+No celular aparecem os botões PIQUE e pausa.
 
 ## O que mudou em relação ao original
 
@@ -24,9 +25,12 @@ Abra http://localhost:5173. Sem build, sem dependências. `?seed=QUALQUERCOISA` 
 | Cada regra copiada 6× (uma por integrante, `favelado_1..6`) | Uma lista `crew[]`; o bonde pode ter qualquer tamanho |
 | Dificuldade constante | Velocidade, densidade e perigos crescem com a distância (`src/difficulty.js`) |
 | Só cachorro e salva-vidas matavam (o Surfista Desatento estava nas instruções mas nunca foi feito) | + Surfista Desatento de verdade, viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
-| Pontos só por item | Multiplicador pelo tamanho do bonde + vantagens roguelike a cada trecho |
+| Pontos só por item | Multiplicador pelo tamanho do bando, **combo** de itens seguidos e vantagens roguelike a cada trecho |
+| Só dava pra andar | **Pique**: arrancada curta com recarga e um respiro de invulnerabilidade |
+| — | **Hora do Arrastão** a cada praia nova: fartura e pontos em dobro |
+| Integrante sumia sem aviso ao ficar pra trás | Alerta piscando e topo da tela avermelhado; bando pequeno atrai mais recrutas |
 | — | Recorde local, desafio do dia (seed por data), toque no celular |
-| Menu, instruções, créditos e HUD de texto no topo | Mesmo layout e sprites de 2017; HUD ganhou multiplicador, praia, escudos e barra da próxima vantagem; página extra de instruções com as novidades |
+| Menu, instruções, créditos e HUD de texto no topo | Mesmo layout e sprites de 2017; HUD virou um bilhete manuscrito no mesmo lugar (Pontos / Wavessons / Distância) com carinhas do bando, onda até a próxima vantagem, combo, etiquetas das vantagens e medidor de pique |
 | Botão Options sem função, músicas importadas e nunca tocadas | Seletor de música no menu com as faixas da equipe; vinheta do gás na troca de praia |
 
 ## Estrutura
