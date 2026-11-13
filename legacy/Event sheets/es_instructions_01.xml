@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<c2eventsheet>
+    <!--All the 'name' attributes are ignored by Construct 2 - they are there for readability only.-->
+    <name>es_instructions_01</name>
+    <events>
+        <event-block sid="1632120911715404">
+            <conditions>
+                <condition id="7" name="Cursor is over object" sid="8974195732646686" type="Mouse">
+                    <param id="0" name="Object">Next</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="1154672126451811" type="Next">
+                    <param id="0" name="Animation">&quot;Default&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="7173824000043311">
+            <conditions>
+                <condition id="7" inverted="1" name="Cursor is over object" sid="7476321591271548" type="Mouse">
+                    <param id="0" name="Object">Next</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="871152463101455" type="Next">
+                    <param id="0" name="Animation">&quot;None&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+    </events>
+</c2eventsheet>

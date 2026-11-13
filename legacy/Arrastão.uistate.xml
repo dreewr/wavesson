@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<c2uistate>
+    <!--This is a UI state file - its content describes the user interface settings when the project was last open.
+It is entirely optional and the project will load without it.  If you are placing the project under source control,
+you probably do not want to add any .uistate.xml files to the repository.-->
+    <configurations>
+        <active>
+            <configuration name="HTML5" />
+        </active>
+        <display name="HTML5" />
+    </configurations>
+    <open-tabs>
+        <layout>Track</layout>
+        <layout>MENU</layout>
+        <layout active="1">Credits</layout>
+        <layout>Instructions_02</layout>
+        <layout>Instructions_01</layout>
+        <event-sheet>es_game</event-sheet>
+        <event-sheet>es_menu</event-sheet>
+        <event-sheet>es_credits</event-sheet>
+        <event-sheet>es_instructions_02</event-sheet>
+        <event-sheet>es_instructions_01</event-sheet>
+    </open-tabs>
+    <properties>
+        <property expanded="0" name="About" />
+        <property expanded="1" name="Project settings" />
+        <property expanded="0" name="Window Size" />
+        <property expanded="0" name="Configuration Settings" />
+    </properties>
+    <families-expanded root="1" />
+    <folders-expanded>
+        <folder expanded="1" path="object-folder/" />
+        <folder expanded="1" path="layout-folder/" />
+        <folder expanded="1" path="event-folder/" />
+        <folder expanded="0" path="file-folder/" />
+        <folder expanded="0" path="file-folder/Icons/" />
+        <folder expanded="1" path="animation-folder/obstaculo_1/" />
+        <folder expanded="1" path="animation-folder/obstaculo_2/" />
+        <folder expanded="1" path="animation-folder/obstaculo_3/" />
+        <folder expanded="1" path="animation-folder/favelado_1/" />
+        <folder expanded="1" path="animation-folder/favelado_6/" />
+        <folder expanded="1" path="animation-folder/favelado_3/" />
+        <folder expanded="1" path="animation-folder/favelado_4/" />
+        <folder expanded="1" path="animation-folder/favelado_2/" />
+        <folder expanded="1" path="animation-folder/Sprite/" />
+        <folder expanded="1" path="animation-folder/recompensa_3/" />
+        <folder expanded="1" path="animation-folder/REDECAMPO2/" />
+        <folder expanded="1" path="animation-folder/CalçadãoCOPACABANA/" />
+        <folder expanded="1" path="animation-folder/coqueiro/" />
+        <folder expanded="1" path="animation-folder/Sprite2/" />
+        <folder expanded="1" path="animation-folder/Sprite3/" />
+        <folder expanded="1" path="animation-folder/Sprite4/" />
+        <folder expanded="1" path="animation-folder/BOLSAOFF/" />
+        <folder expanded="1" path="animation-folder/BOLSAOFF2/" />
+        <folder expanded="1" path="animation-folder/BOLSAOFF3/" />
+        <folder expanded="1" path="animation-folder/BOLSAONOK/" />
+        <folder expanded="1" path="animation-folder/CELULAROFFOK/" />
+        <folder expanded="1" path="animation-folder/CELULARON/" />
+        <folder expanded="1" path="animation-folder/CHINELOOFFOK/" />
+        <folder expanded="1" path="animation-folder/SALVAVIDAS/" />
+        <folder expanded="1" path="animation-folder/vendedorPICOLEmovA/" />
+        <folder expanded="1" path="animation-folder/GuardaSol/" />
+        <folder expanded="1" path="animation-folder/GuardaSol2/" />
+        <folder expanded="1" path="animation-folder/GuardaSol3/" />
+        <folder expanded="1" path="animation-folder/Toalha/" />
+        <folder expanded="1" path="animation-folder/Toalha2/" />
+        <folder expanded="1" path="animation-folder/Toalha3/" />
+        <folder expanded="1" path="animation-folder/Sprite5/" />
+        <folder expanded="1" path="animation-folder/favelado_5/" />
+        <folder expanded="1" path="animation-folder/faveladoA/" />
+        <folder expanded="1" path="animation-folder/calçadaoIPANEMA/" />
+        <folder expanded="1" path="animation-folder/MAR_MENU/" />
+        <folder expanded="1" path="animation-folder/Sprite7/" />
+        <folder expanded="1" path="animation-folder/Sprite8/" />
+        <folder expanded="1" path="animation-folder/Start/" />
+        <folder expanded="1" path="animation-folder/Credits/" />
+        <folder expanded="1" path="animation-folder/Sprite11/" />
+        <folder expanded="1" path="animation-folder/LimiteX/" />
+        <folder expanded="1" path="animation-folder/Instructions/" />
+        <folder expanded="1" path="animation-folder/Options/" />
+        <folder expanded="1" path="animation-folder/Sprite6/" />
+        <folder expanded="1" path="animation-folder/Sprite9/" />
+        <folder expanded="1" path="animation-folder/Credit_BLU/" />
+        <folder expanded="1" path="animation-folder/Inst_text_02/" />
+        <folder expanded="1" path="animation-folder/WavessonHead/" />
+        <folder expanded="1" path="animation-folder/Sprite12/" />
+        <folder expanded="1" path="animation-folder/Sprite13/" />
+        <folder expanded="1" path="animation-folder/Back/" />
+        <folder expanded="1" path="animation-folder/Next/" />
+        <folder expanded="1" path="animation-folder/Inst_text_01/" />
+        <folder expanded="1" path="animation-folder/menuzaaum/" />
+    </folders-expanded>
+</c2uistate>

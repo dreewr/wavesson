@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<c2eventsheet>
+    <!--All the 'name' attributes are ignored by Construct 2 - they are there for readability only.-->
+    <name>es_menu</name>
+    <events>
+        <event-block sid="3233185388202796">
+            <conditions>
+                <condition id="-2" name="On start of layout" sid="9614192259327677" type="System" />
+            </conditions>
+            <actions>
+                <action id="0" name="Play" sid="3744519552085096" type="Audio">
+                    <param id="0" name="Audio file">song (4)</param>
+                    <param id="2" name="Loop">1</param>
+                    <param id="3" name="Volume">1</param>
+                    <param id="1" name="Tag (optional)">&quot;&quot;</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="1044093443108612">
+            <conditions>
+                <condition id="7" name="Cursor is over object" sid="4376547217578873" type="Mouse">
+                    <param id="0" name="Object">Start</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="6256254820500424" type="Start">
+                    <param id="0" name="Animation">&quot;Default&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="1446229451751985">
+            <conditions>
+                <condition id="7" inverted="1" name="Cursor is over object" sid="2430270627047428" type="Mouse">
+                    <param id="0" name="Object">Start</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="1617481852513427" type="Start">
+                    <param id="0" name="Animation">&quot;None&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="2170440819365013">
+            <conditions>
+                <condition id="7" name="Cursor is over object" sid="8010399410095949" type="Mouse">
+                    <param id="0" name="Object">Instructions</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="1038564208919915" type="Instructions">
+                    <param id="0" name="Animation">&quot;Default&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="5052537145407104">
+            <conditions>
+                <condition id="7" inverted="1" name="Cursor is over object" sid="638739231467277" type="Mouse">
+                    <param id="0" name="Object">Instructions</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="9115498571695252" type="Instructions">
+                    <param id="0" name="Animation">&quot;None&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="785731203940312">
+            <conditions>
+                <condition id="7" name="Cursor is over object" sid="8454449155804035" type="Mouse">
+                    <param id="0" name="Object">Credits</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="1810883272708328" type="Credits">
+                    <param id="0" name="Animation">&quot;Default&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="1562027757398031">
+            <conditions>
+                <condition id="7" inverted="1" name="Cursor is over object" sid="3010224786865642" type="Mouse">
+                    <param id="0" name="Object">Credits</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="8117709679578784" type="Credits">
+                    <param id="0" name="Animation">&quot;None&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="6897526160544951">
+            <conditions>
+                <condition id="7" name="Cursor is over object" sid="1509666558301311" type="Mouse">
+                    <param id="0" name="Object">Options</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="8754270742437194" type="Options">
+                    <param id="0" name="Animation">&quot;Default&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="6362114042483214">
+            <conditions>
+                <condition id="7" inverted="1" name="Cursor is over object" sid="5879935041774586" type="Mouse">
+                    <param id="0" name="Object">Options</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="588084550694571" type="Options">
+                    <param id="0" name="Animation">&quot;None&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="8512712625775564">
+            <conditions>
+                <condition id="6" name="On object clicked" sid="3281059812980189" type="Mouse">
+                    <param id="0" name="Mouse button">0</param>
+                    <param id="1" name="Click type">0</param>
+                    <param id="2" name="Object clicked">Start</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-25" name="Go to layout (by name)" sid="2016626272674999" type="System">
+                    <param id="0" name="Layout">&quot;Track&quot;</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="3171008352717423">
+            <conditions>
+                <condition id="6" name="On object clicked" sid="1382659193352931" type="Mouse">
+                    <param id="0" name="Mouse button">0</param>
+                    <param id="1" name="Click type">0</param>
+                    <param id="2" name="Object clicked">Credits</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-25" name="Go to layout (by name)" sid="292888954720942" type="System">
+                    <param id="0" name="Layout">&quot;Credits&quot;</param>
+                </action>
+            </actions>
+        </event-block>
+    </events>
+</c2eventsheet>

@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<c2eventsheet>
+    <!--All the 'name' attributes are ignored by Construct 2 - they are there for readability only.-->
+    <name>es_credits</name>
+    <events>
+        <event-block sid="8365642351802976">
+            <conditions>
+                <condition id="7" name="Cursor is over object" sid="7468016345232439" type="Mouse">
+                    <param id="0" name="Object">menuzaaum</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="4539373879273985" type="menuzaaum">
+                    <param id="0" name="Animation">&quot;Default&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="8648033030090505">
+            <conditions>
+                <condition id="7" inverted="1" name="Cursor is over object" sid="169313053026251" type="Mouse">
+                    <param id="0" name="Object">menuzaaum</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="4" name="Set animation" sid="7369752665949402" type="menuzaaum">
+                    <param id="0" name="Animation">&quot;None&quot;</param>
+                    <param id="1" name="From">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="5467967654041139">
+            <conditions>
+                <condition id="6" name="On object clicked" sid="1671172922541265" type="Mouse">
+                    <param id="0" name="Mouse button">0</param>
+                    <param id="1" name="Click type">0</param>
+                    <param id="2" name="Object clicked">menuzaaum</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-2" name="Go to layout" sid="557049395654814" type="System">
+                    <param id="0" name="Layout">MENU</param>
+                </action>
+            </actions>
+        </event-block>
+    </events>
+</c2eventsheet>

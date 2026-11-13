@@ -1,0 +1,973 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<c2eventsheet>
+    <!--All the 'name' attributes are ignored by Construct 2 - they are there for readability only.-->
+    <name>es_game</name>
+    <events>
+        <variable constant="0" name="integrantes" sid="4328488190263912" static="0" type="number">0</variable>
+        <variable comment="pontuação" constant="0" name="pontos" sid="204911949759909" static="0" type="number">0</variable>
+        <variable constant="0" name="speedPlayer" sid="4992445800343826" static="0" type="number">11</variable>
+        <variable constant="0" name="speedBackground" sid="8002915120034781" static="0" type="number">3</variable>
+        <variable comment="Variável que guarda a posição do layout" constant="0" name="positionY" sid="6300587287816619" static="0" type="number">360</variable>
+        <event-block sid="5919263979689562">
+            <conditions>
+                <condition id="-1" name="Every tick" sid="7495680917124128" type="System" />
+            </conditions>
+            <actions>
+                <action id="-9" name="Set value" sid="7677233088418083" type="System">
+                    <param id="0" name="Variable">positionY</param>
+                    <param id="1" name="Value">positionY +speedBackground</param>
+                </action>
+                <action id="-6" name="Scroll to Y" sid="9928753236640467" type="System">
+                    <param id="0" name="Y">positionY</param>
+                </action>
+                <action id="-23" name="Move at angle" sid="2774301366810635" type="favelado_1">
+                    <param id="0" name="Angle">90</param>
+                    <param id="1" name="Distance">speedBackground</param>
+                </action>
+                <action id="-23" name="Move at angle" sid="2205348352187516" type="favelado_2">
+                    <param id="0" name="Angle">90</param>
+                    <param id="1" name="Distance">speedBackground</param>
+                </action>
+                <action id="-23" name="Move at angle" sid="8601051421451197" type="favelado_3">
+                    <param id="0" name="Angle">90</param>
+                    <param id="1" name="Distance">speedBackground</param>
+                </action>
+                <action id="-23" name="Move at angle" sid="4642117494506053" type="favelado_4">
+                    <param id="0" name="Angle">90</param>
+                    <param id="1" name="Distance">speedBackground</param>
+                </action>
+                <action id="-23" name="Move at angle" sid="1769816196325705" type="favelado_6">
+                    <param id="0" name="Angle">90</param>
+                    <param id="1" name="Distance">speedBackground</param>
+                </action>
+                <action id="0" name="Set text" sid="5643097339260626" type="texto_distancia">
+                    <param id="0" name="Text">(positionY -360)/100</param>
+                </action>
+                <action id="0" name="Set text" sid="5331727737170413" type="texto_points">
+                    <param id="0" name="Text">pontos</param>
+                </action>
+                <action id="-23" name="Move at angle" sid="5277995340357955" type="favelado_5">
+                    <param id="0" name="Angle">90</param>
+                    <param id="1" name="Distance">speedBackground</param>
+                </action>
+                <action id="0" name="Set text" sid="6981857620144694" type="texto_integrantes">
+                    <param id="0" name="Text">integrantes</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-group description="" sid="2276538799414675" title="Punições">
+            <sub-events>
+                <event-block sid="7132736769365017">
+                    <conditions>
+                        <condition id="0" name="On collision with another object" sid="7825741146166589" type="favelado_1">
+                            <param id="0" name="Object">LimiteX</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="462195104841677" type="favelado_1" />
+                    </actions>
+                </event-block>
+                <event-block sid="4669747190690389">
+                    <conditions>
+                        <condition id="-2" name="Compare Y" sid="4752681716234542" type="favelado_1">
+                            <param id="0" name="Comparison">2</param>
+                            <param id="1" name="Y co-ordinate">scrolly - 400</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="5969123183053763" type="favelado_1" />
+                    </actions>
+                </event-block>
+                <event-block sid="9511718042128455">
+                    <conditions>
+                        <condition id="0" name="On collision with another object" sid="3458996907110016" type="favelado_2">
+                            <param id="0" name="Object">LimiteX</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="6568653009399591" type="favelado_2" />
+                    </actions>
+                </event-block>
+                <event-block sid="1415187866330263">
+                    <conditions>
+                        <condition id="-2" name="Compare Y" sid="8243987188348049" type="favelado_2">
+                            <param id="0" name="Comparison">2</param>
+                            <param id="1" name="Y co-ordinate">scrolly -400</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="2867256161711971" type="favelado_2" />
+                    </actions>
+                </event-block>
+                <event-block sid="457323036358315">
+                    <conditions>
+                        <condition id="0" name="On collision with another object" sid="7025081665374538" type="favelado_3">
+                            <param id="0" name="Object">LimiteX</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="7940825783885158" type="favelado_3" />
+                    </actions>
+                </event-block>
+                <event-block sid="8739233586280849">
+                    <conditions>
+                        <condition id="-2" name="Compare Y" sid="1624336370556577" type="favelado_3">
+                            <param id="0" name="Comparison">2</param>
+                            <param id="1" name="Y co-ordinate">scrolly -400</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="1315588105913331" type="favelado_3" />
+                    </actions>
+                </event-block>
+                <event-block sid="7905510318022782">
+                    <conditions>
+                        <condition id="0" name="On collision with another object" sid="9938225279232458" type="favelado_4">
+                            <param id="0" name="Object">LimiteX</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="318537117267618" type="favelado_4" />
+                    </actions>
+                </event-block>
+                <event-block sid="8504192594304234">
+                    <conditions>
+                        <condition id="-2" name="Compare Y" sid="7394621452957095" type="favelado_4">
+                            <param id="0" name="Comparison">2</param>
+                            <param id="1" name="Y co-ordinate">scrolly -400</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="3746473898841807" type="favelado_4" />
+                    </actions>
+                </event-block>
+                <event-block sid="2830793043441889">
+                    <conditions>
+                        <condition id="0" name="On collision with another object" sid="6799270090335104" type="favelado_5">
+                            <param id="0" name="Object">LimiteX</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="4299582146645676" type="favelado_5" />
+                    </actions>
+                </event-block>
+                <event-block sid="3876058940245474">
+                    <conditions>
+                        <condition id="-2" name="Compare Y" sid="2862100537794888" type="favelado_5">
+                            <param id="0" name="Comparison">2</param>
+                            <param id="1" name="Y co-ordinate">scrolly -400</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="9817859832500683" type="favelado_5" />
+                    </actions>
+                </event-block>
+                <event-block sid="9294575957785268">
+                    <conditions>
+                        <condition id="0" name="On collision with another object" sid="4136300163035766" type="favelado_6">
+                            <param id="0" name="Object">LimiteX</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="9865893060228081" type="favelado_6" />
+                    </actions>
+                </event-block>
+                <event-block sid="8618531708057447">
+                    <conditions>
+                        <condition id="-2" name="Compare Y" sid="9288432614879035" type="favelado_6">
+                            <param id="0" name="Comparison">2</param>
+                            <param id="1" name="Y co-ordinate">scrolly -400</param>
+                        </condition>
+                    </conditions>
+                    <actions>
+                        <action id="-9" name="Destroy" sid="2524446672442739" type="favelado_6" />
+                    </actions>
+                </event-block>
+                <event-group description="" sid="220566779748164" title="Morte Instantânea">
+                    <sub-events>
+                        <event-block sid="9924212507700621">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="1541208591567479" type="obstaculo_2">
+                                    <param id="0" name="Object">favelado_1</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action id="-9" name="Destroy" sid="1246610658506513" type="favelado_1" />
+                            </actions>
+                        </event-block>
+                        <event-block sid="7921953328698839">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="909239248594186" type="obstaculo_2">
+                                    <param id="0" name="Object">favelado_2</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action id="-9" name="Destroy" sid="7106581141923369" type="favelado_2" />
+                            </actions>
+                        </event-block>
+                        <event-block sid="4275652411906806">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="9198687422600241" type="obstaculo_2">
+                                    <param id="0" name="Object">favelado_3</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action id="-9" name="Destroy" sid="3773799052772378" type="favelado_3" />
+                            </actions>
+                        </event-block>
+                        <event-block sid="4674195546842617">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="3909609224021118" type="obstaculo_2">
+                                    <param id="0" name="Object">favelado_4</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action id="-9" name="Destroy" sid="202465085304193" type="favelado_4" />
+                            </actions>
+                        </event-block>
+                        <event-block sid="5237385976337615">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="7808055701105927" type="obstaculo_2">
+                                    <param id="0" name="Object">favelado_6</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action id="-9" name="Destroy" sid="1877127151760005" type="favelado_6" />
+                            </actions>
+                        </event-block>
+                        <event-block sid="1263119432627323">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="9236848829001337" type="obstaculo_2">
+                                    <param id="0" name="Object">favelado_5</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action id="-9" name="Destroy" sid="599613709010478" type="favelado_5" />
+                            </actions>
+                        </event-block>
+                    </sub-events>
+                </event-group>
+                <event-group description="" sid="9335377077954248" title="Lentidão">
+                    <sub-events>
+                        <event-block sid="1900041647664775">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="5029112956538071" type="favelado_1">
+                                    <param id="0" name="Object">obstaculo_3</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action behavior="Solid" id="0" name="Set enabled" sid="3619611792499604" type="obstaculo_3">
+                                    <param id="0" name="State">0</param>
+                                </action>
+                                <action behavior="8Direction" id="5" name="Set acceleration" sid="5919658237249078" type="favelado_1">
+                                    <param id="0" name="Acceleration">favelado_1.8Direction.Deceleration+1</param>
+                                </action>
+                                <action behavior="8Direction" id="4" name="Set max speed" sid="6385096440539219" type="favelado_1">
+                                    <param id="0" name="Max Speed">favelado_1.8Direction.MaxSpeed/2</param>
+                                </action>
+                                <action behavior="8Direction" id="5" name="Set acceleration" sid="6539337225904023" type="favelado_1">
+                                    <param id="0" name="Acceleration">favelado_1.8Direction.Deceleration-1</param>
+                                </action>
+                                <action id="4" name="Set animation" sid="738149031370077" type="obstaculo_3">
+                                    <param id="0" name="Animation">&quot;Destroy&quot;</param>
+                                    <param id="1" name="From">1</param>
+                                </action>
+                            </actions>
+                        </event-block>
+                        <event-block sid="5841482088931944">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="6400006247071336" type="favelado_2">
+                                    <param id="0" name="Object">obstaculo_3</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action behavior="Solid" id="0" name="Set enabled" sid="777113460756415" type="obstaculo_3">
+                                    <param id="0" name="State">0</param>
+                                </action>
+                                <action behavior="8Direction" id="4" name="Set max speed" sid="9444729577809743" type="favelado_2">
+                                    <param id="0" name="Max Speed">favelado_2.8Direction.MaxSpeed/2</param>
+                                </action>
+                                <action behavior="8Direction" id="5" name="Set acceleration" sid="297484611322409" type="favelado_2">
+                                    <param id="0" name="Acceleration">favelado_2.8Direction.Deceleration-1</param>
+                                </action>
+                                <action id="4" name="Set animation" sid="5454067218905626" type="obstaculo_3">
+                                    <param id="0" name="Animation">&quot;Destroy&quot;</param>
+                                    <param id="1" name="From">1</param>
+                                </action>
+                                <action behavior="8Direction" id="6" name="Set deceleration" sid="8740265530987754" type="favelado_2">
+                                    <param id="0" name="Deceleration">favelado_1.8Direction.Deceleration+1</param>
+                                </action>
+                            </actions>
+                        </event-block>
+                        <event-block sid="6919389963407972">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="8801650303935984" type="favelado_3">
+                                    <param id="0" name="Object">obstaculo_3</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action behavior="Solid" id="0" name="Set enabled" sid="7617423166257725" type="obstaculo_3">
+                                    <param id="0" name="State">0</param>
+                                </action>
+                                <action behavior="8Direction" id="5" name="Set acceleration" sid="2253472720143581" type="favelado_3">
+                                    <param id="0" name="Acceleration">favelado_3.8Direction.Deceleration+1</param>
+                                </action>
+                                <action behavior="8Direction" id="4" name="Set max speed" sid="6341799954658051" type="favelado_3">
+                                    <param id="0" name="Max Speed">favelado_3.8Direction.MaxSpeed/2</param>
+                                </action>
+                                <action behavior="8Direction" id="6" name="Set deceleration" sid="3803558943027004" type="favelado_3">
+                                    <param id="0" name="Deceleration">favelado_3.8Direction.Deceleration-1</param>
+                                </action>
+                                <action id="4" name="Set animation" sid="2301885354729249" type="obstaculo_3">
+                                    <param id="0" name="Animation">&quot;Destroy&quot;</param>
+                                    <param id="1" name="From">1</param>
+                                </action>
+                            </actions>
+                        </event-block>
+                        <event-block sid="8081299567550427">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="7178757786870619" type="favelado_4">
+                                    <param id="0" name="Object">obstaculo_3</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action behavior="Solid" id="0" name="Set enabled" sid="4237818735961915" type="obstaculo_3">
+                                    <param id="0" name="State">0</param>
+                                </action>
+                                <action behavior="8Direction" id="5" name="Set acceleration" sid="1268843886782003" type="favelado_4">
+                                    <param id="0" name="Acceleration">favelado_4.8Direction.Deceleration+1</param>
+                                </action>
+                                <action behavior="8Direction" id="4" name="Set max speed" sid="5829225878841943" type="favelado_4">
+                                    <param id="0" name="Max Speed">favelado_4.8Direction.MaxSpeed/2</param>
+                                </action>
+                                <action behavior="8Direction" id="6" name="Set deceleration" sid="2965368540033956" type="favelado_4">
+                                    <param id="0" name="Deceleration">favelado_4.8Direction.Deceleration-1</param>
+                                </action>
+                                <action id="4" name="Set animation" sid="3261819874663608" type="obstaculo_3">
+                                    <param id="0" name="Animation">&quot;Destroy&quot;</param>
+                                    <param id="1" name="From">1</param>
+                                </action>
+                            </actions>
+                        </event-block>
+                        <event-block sid="3250179563398556">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="2089472894311154" type="favelado_5">
+                                    <param id="0" name="Object">obstaculo_3</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action behavior="Solid" id="0" name="Set enabled" sid="2836451649407482" type="obstaculo_3">
+                                    <param id="0" name="State">0</param>
+                                </action>
+                                <action id="4" name="Set animation" sid="5486710302803313" type="obstaculo_3">
+                                    <param id="0" name="Animation">&quot;Destroy&quot;</param>
+                                    <param id="1" name="From">1</param>
+                                </action>
+                                <action behavior="8Direction" id="5" name="Set acceleration" sid="825578399159657" type="favelado_5">
+                                    <param id="0" name="Acceleration">favelado_5.8Direction.Deceleration+1</param>
+                                </action>
+                                <action behavior="8Direction" id="4" name="Set max speed" sid="3114119888886908" type="favelado_5">
+                                    <param id="0" name="Max Speed">favelado_5.8Direction.MaxSpeed/2</param>
+                                </action>
+                                <action behavior="8Direction" id="4" name="Set max speed" sid="7083121185901211" type="favelado_5">
+                                    <param id="0" name="Max Speed">favelado_5.8Direction.Deceleration-1</param>
+                                </action>
+                            </actions>
+                        </event-block>
+                        <event-block sid="7384030989433367">
+                            <conditions>
+                                <condition id="0" name="On collision with another object" sid="4493162872356948" type="favelado_6">
+                                    <param id="0" name="Object">obstaculo_3</param>
+                                </condition>
+                            </conditions>
+                            <actions>
+                                <action behavior="Solid" id="0" name="Set enabled" sid="8534273851224273" type="obstaculo_3">
+                                    <param id="0" name="State">0</param>
+                                </action>
+                                <action behavior="8Direction" id="5" name="Set acceleration" sid="7399413300839044" type="favelado_6">
+                                    <param id="0" name="Acceleration">favelado_6.8Direction.Deceleration+1</param>
+                                </action>
+                                <action behavior="8Direction" id="4" name="Set max speed" sid="5231054800887646" type="favelado_6">
+                                    <param id="0" name="Max Speed">favelado_6.8Direction.MaxSpeed/2</param>
+                                </action>
+                                <action behavior="8Direction" id="6" name="Set deceleration" sid="1862336136037968" type="favelado_6">
+                                    <param id="0" name="Deceleration">favelado_6.8Direction.Deceleration-1</param>
+                                </action>
+                                <action id="4" name="Set animation" sid="1233157379939462" type="obstaculo_3">
+                                    <param id="0" name="Animation">&quot;Destroy&quot;</param>
+                                    <param id="1" name="From">1</param>
+                                </action>
+                            </actions>
+                        </event-block>
+                    </sub-events>
+                </event-group>
+            </sub-events>
+        </event-group>
+        <event-block sid="5015577981664458">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="4255766914575956" type="favelado_2">
+                    <param id="0" name="Object">CELULAROFFOK</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="9092546033810666" type="CELULAROFFOK" />
+                <action id="-10" name="Add to" sid="4872690768518113" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">100</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="3934405606402009">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="3646603551087427" type="favelado_4">
+                    <param id="0" name="Object">CELULAROFFOK</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="234487060042806" type="CELULAROFFOK" />
+                <action id="-10" name="Add to" sid="4452933497352847" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">100</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="2717868830281248">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="3399592219437897" type="favelado_5">
+                    <param id="0" name="Object">CELULAROFFOK</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="6825402483411831" type="CELULAROFFOK" />
+                <action id="-10" name="Add to" sid="2848951847143607" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">100</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="2508978342899037">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="8556520918556114" type="favelado_3">
+                    <param id="0" name="Object">CELULAROFFOK</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="3747504773634721" type="CELULAROFFOK" />
+                <action id="-10" name="Add to" sid="3986998567398294" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">100</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="299923969682607">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="1259156527416937" type="favelado_6">
+                    <param id="0" name="Object">CELULAROFFOK</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="743093192658232" type="CELULAROFFOK" />
+                <action id="-10" name="Add to" sid="8564802373905301" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">100</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="7774660608963785">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="453403198470201" type="favelado_1">
+                    <param id="0" name="Object">CELULAROFFOK</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="1877609898747974" type="CELULAROFFOK" />
+                <action id="-9" name="Set value" sid="7362665058053287" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos + 100</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="1219073328233775">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="1548821990066377" type="CHINELOOFFOK">
+                    <param id="0" name="Object">favelado_1</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="4841690239142103" type="CHINELOOFFOK" />
+                <action id="-9" name="Set value" sid="9684545564767331" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+10</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="7808364495865767">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="7336756518020844" type="CHINELOOFFOK">
+                    <param id="0" name="Object">favelado_2</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="6602733666752318" type="CHINELOOFFOK" />
+                <action id="-9" name="Set value" sid="6636822907720286" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+10</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="1083017662543091">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="8339973730846125" type="CHINELOOFFOK">
+                    <param id="0" name="Object">favelado_3</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="4834525721554925" type="CHINELOOFFOK" />
+                <action id="-9" name="Set value" sid="7390771654231648" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+10</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="2409509570107965">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="1909405950487743" type="CHINELOOFFOK">
+                    <param id="0" name="Object">favelado_6</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="2578852441104251" type="CHINELOOFFOK" />
+                <action id="-9" name="Set value" sid="2096412197135125" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+10</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="6882599312704994">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="5910322293643249" type="CHINELOOFFOK">
+                    <param id="0" name="Object">favelado_5</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="3651663351788735" type="CHINELOOFFOK" />
+                <action id="-9" name="Set value" sid="3279791061812875" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+10</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="2136725033877747">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="605671001566925" type="CHINELOOFFOK">
+                    <param id="0" name="Object">favelado_4</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="1446708984257008" type="CHINELOOFFOK" />
+                <action id="-9" name="Set value" sid="101292747294656" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+10</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="6408511953814235">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="1413629502143028" type="BOLSAONOK">
+                    <param id="0" name="Object">favelado_1</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="2069836377537582" type="BOLSAONOK" />
+                <action id="-9" name="Set value" sid="5220189178885721" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+200</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="215703104136458">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="2107802408807809" type="BOLSAONOK">
+                    <param id="0" name="Object">favelado_2</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="4285979393872917" type="BOLSAONOK" />
+                <action id="-9" name="Set value" sid="3302201528325546" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+200</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="6085417366760588">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="6917774109580882" type="BOLSAONOK">
+                    <param id="0" name="Object">favelado_3</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="3435849178446039" type="BOLSAONOK" />
+                <action id="-9" name="Set value" sid="2633479969923169" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+200</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="9706976394433616">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="1155325674474459" type="BOLSAONOK">
+                    <param id="0" name="Object">favelado_4</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="7951049238846482" type="BOLSAONOK" />
+                <action id="-9" name="Set value" sid="5468476189758111" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+200</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="196826137491652">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="2854857530894828" type="BOLSAONOK">
+                    <param id="0" name="Object">favelado_5</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="1994854834607482" type="BOLSAONOK" />
+                <action id="-9" name="Set value" sid="4414223666174167" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+200</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="3205462426681632">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="9101872996946911" type="BOLSAONOK">
+                    <param id="0" name="Object">favelado_6</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="7496795758858486" type="BOLSAONOK" />
+                <action id="-9" name="Set value" sid="9788852716369846" type="System">
+                    <param id="0" name="Variable">pontos</param>
+                    <param id="1" name="Value">pontos+200</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="7038228583908773">
+            <conditions>
+                <condition id="-3" name="Is on-screen" sid="9951649181770476" type="vendedorPICOLEmovA" />
+            </conditions>
+            <actions>
+                <action id="-23" name="Move at angle" sid="926771204456935" type="vendedorPICOLEmovA">
+                    <param id="0" name="Angle">-90</param>
+                    <param id="1" name="Distance">5</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="3304381387301298">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="3597514125303523" type="SALVAVIDAS">
+                    <param id="0" name="Object">favelado_1</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="6543751623159593" type="favelado_1" />
+            </actions>
+        </event-block>
+        <event-block sid="2399933035930167">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="2052514900243682" type="SALVAVIDAS">
+                    <param id="0" name="Object">favelado_2</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="2247401348459987" type="favelado_2" />
+            </actions>
+        </event-block>
+        <event-block sid="7505833464295976">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="2866490882027268" type="SALVAVIDAS">
+                    <param id="0" name="Object">favelado_3</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="8885301757207687" type="favelado_3" />
+            </actions>
+        </event-block>
+        <event-block sid="853343681307148">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="4638725985242591" type="SALVAVIDAS">
+                    <param id="0" name="Object">favelado_4</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="7511318478231501" type="favelado_4" />
+            </actions>
+        </event-block>
+        <event-block sid="4035569605170341">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="7033438452185501" type="SALVAVIDAS">
+                    <param id="0" name="Object">favelado_6</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="6507539265433564" type="favelado_6" />
+            </actions>
+        </event-block>
+        <event-block sid="6761034992742013">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="7606067197006626" type="SALVAVIDAS">
+                    <param id="0" name="Object">favelado_5</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-9" name="Destroy" sid="4835402393194613" type="favelado_5" />
+            </actions>
+        </event-block>
+        <event-block sid="7812139738239033">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="6877260155918695" type="faveladoA">
+                    <param id="0" name="Object">favelado_1</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="0" name="Spawn another object" sid="1012210794036891" type="faveladoA">
+                    <param id="0" name="Object">favelado_2</param>
+                    <param id="1" name="Layer">1</param>
+                    <param id="2" name="Image point">0</param>
+                </action>
+                <action id="-9" name="Destroy" sid="9293573344563162" type="faveladoA" />
+            </actions>
+        </event-block>
+        <event-block sid="6974179304296577">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="7534180703472633" type="faveladoA">
+                    <param id="0" name="Object">favelado_2</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="0" name="Spawn another object" sid="720101377408979" type="faveladoA">
+                    <param id="0" name="Object">favelado_3</param>
+                    <param id="1" name="Layer">1</param>
+                    <param id="2" name="Image point">0</param>
+                </action>
+                <action id="-9" name="Destroy" sid="9541000752780251" type="faveladoA" />
+            </actions>
+        </event-block>
+        <event-block sid="5578143098040411">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="1960419945449575" type="faveladoA">
+                    <param id="0" name="Object">favelado_3</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="0" name="Spawn another object" sid="4693039822146428" type="faveladoA">
+                    <param id="0" name="Object">favelado_4</param>
+                    <param id="1" name="Layer">1</param>
+                    <param id="2" name="Image point">0</param>
+                </action>
+                <action id="-9" name="Destroy" sid="9019659431854622" type="faveladoA" />
+            </actions>
+        </event-block>
+        <event-block sid="1293381740625955">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="3559065048489788" type="faveladoA">
+                    <param id="0" name="Object">favelado_4</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="0" name="Spawn another object" sid="8768435994724253" type="faveladoA">
+                    <param id="0" name="Object">favelado_5</param>
+                    <param id="1" name="Layer">1</param>
+                    <param id="2" name="Image point">0</param>
+                </action>
+                <action id="-9" name="Destroy" sid="8032623259947177" type="faveladoA" />
+            </actions>
+        </event-block>
+        <event-block sid="3673587611023797">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="7403797313101002" type="faveladoA">
+                    <param id="0" name="Object">favelado_5</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="0" name="Spawn another object" sid="982959918041511" type="faveladoA">
+                    <param id="0" name="Object">favelado_6</param>
+                    <param id="1" name="Layer">1</param>
+                    <param id="2" name="Image point">0</param>
+                </action>
+                <action id="-9" name="Destroy" sid="1483095881380362" type="faveladoA" />
+            </actions>
+        </event-block>
+        <event-block sid="8065399082246136">
+            <conditions>
+                <condition id="0" name="On collision with another object" sid="6039965007785829" type="faveladoA">
+                    <param id="0" name="Object">favelado_6</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="0" name="Spawn another object" sid="5513985673888035" type="faveladoA">
+                    <param id="0" name="Object">favelado_1</param>
+                    <param id="1" name="Layer">1</param>
+                    <param id="2" name="Image point">0</param>
+                </action>
+                <action id="-9" name="Destroy" sid="9869017852115245" type="faveladoA" />
+            </actions>
+        </event-block>
+        <event-block sid="7965186371736398">
+            <conditions>
+                <condition id="-14" name="Compare variable" sid="2718461116173436" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Comparison">0</param>
+                    <param id="2" name="Value">0</param>
+                </condition>
+            </conditions>
+            <actions>
+                <action id="-36" name="Save" sid="3707552072858554" type="System">
+                    <param id="0" name="Slot">&quot;mysave&quot;</param>
+                </action>
+                <action id="-2" name="Go to layout" sid="2436624278765945" type="System">
+                    <param id="0" name="Layout">Splash Screen</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="3755749863182215">
+            <conditions>
+                <condition id="-19" name="On destroyed" sid="1209211830196672" type="favelado_1" />
+            </conditions>
+            <actions>
+                <action id="-11" name="Subtract from" sid="8908659268889281" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="814112115582135">
+            <conditions>
+                <condition id="-19" name="On destroyed" sid="3338792527334894" type="favelado_2" />
+            </conditions>
+            <actions>
+                <action id="-11" name="Subtract from" sid="3394809225941046" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="4233503210414082">
+            <conditions>
+                <condition id="-19" name="On destroyed" sid="9842552246058775" type="favelado_3" />
+            </conditions>
+            <actions>
+                <action id="-11" name="Subtract from" sid="3265347148072272" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="1663219716187426">
+            <conditions>
+                <condition id="-19" name="On destroyed" sid="2893149867388094" type="favelado_4" />
+            </conditions>
+            <actions>
+                <action id="-11" name="Subtract from" sid="5765545027204485" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="2734934316653942">
+            <conditions>
+                <condition id="-19" name="On destroyed" sid="743482417402296" type="favelado_5" />
+            </conditions>
+            <actions>
+                <action id="-11" name="Subtract from" sid="6824492025910872" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="726127997326676">
+            <conditions>
+                <condition id="-19" name="On destroyed" sid="2927211256408184" type="favelado_6" />
+            </conditions>
+            <actions>
+                <action id="-11" name="Subtract from" sid="8993195976992549" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="6601477285678953">
+            <conditions>
+                <condition id="-18" name="On created" sid="8186238535358766" type="favelado_1" />
+            </conditions>
+            <actions>
+                <action id="-10" name="Add to" sid="4748301338541644" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="4784281270348056">
+            <conditions>
+                <condition id="-18" name="On created" sid="8151306289846265" type="favelado_2" />
+            </conditions>
+            <actions>
+                <action id="-10" name="Add to" sid="1511323670362704" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="5212464071033132">
+            <conditions>
+                <condition id="-18" name="On created" sid="6255958781983244" type="favelado_3" />
+            </conditions>
+            <actions>
+                <action id="-10" name="Add to" sid="6713291501567305" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="7197589282685144">
+            <conditions>
+                <condition id="-18" name="On created" sid="7293437453482846" type="favelado_4" />
+            </conditions>
+            <actions>
+                <action id="-10" name="Add to" sid="5955268145695475" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="7183908874816649">
+            <conditions>
+                <condition id="-18" name="On created" sid="445203363533804" type="favelado_5" />
+            </conditions>
+            <actions>
+                <action id="-10" name="Add to" sid="9627790107349988" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="5279959041315262">
+            <conditions>
+                <condition id="-18" name="On created" sid="570481918586873" type="favelado_6" />
+            </conditions>
+            <actions>
+                <action id="-10" name="Add to" sid="8762486888589112" type="System">
+                    <param id="0" name="Variable">integrantes</param>
+                    <param id="1" name="Value">1</param>
+                </action>
+            </actions>
+        </event-block>
+        <event-block sid="8922264553831939">
+            <conditions />
+            <actions />
+        </event-block>
+    </events>
+</c2eventsheet>
