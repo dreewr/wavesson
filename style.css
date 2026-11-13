@@ -105,6 +105,10 @@ button.primary { background: var(--yellow); }
 .card b { font-size: 20px; }
 .card .key { font-size: 13px; opacity: 0.6; }
 
+.tracks { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.track { text-align: left; font-size: 18px; }
+.track.selected { background: var(--yellow); }
+
 #summary { margin-bottom: 12px; }
 #summary .big { font-size: 40px; font-weight: 900; }
 #summary .record { color: #c62828; font-weight: 900; }

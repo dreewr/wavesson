@@ -26,6 +26,7 @@ Abra http://localhost:5173. Sem build, sem dependências. `?seed=QUALQUERCOISA` 
 | Só cachorro e salva-vidas matavam | + viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
 | Pontos só por item | Multiplicador pelo tamanho do bonde + vantagens roguelike a cada trecho |
 | — | Recorde local, desafio do dia (seed por data), toque no celular |
+| Botão Options sem função, músicas importadas e nunca tocadas | Seletor de música no menu com as faixas da equipe; vinheta do gás na troca de praia |
 
 ## Estrutura
 
@@ -49,5 +50,8 @@ npm test
 
 ## Créditos
 
-Arte, sprites e trilha: equipe Wavesson02 (hackathon, 2017). As faixas de terceiros usadas na época
-foram removidas do repositório.
+Arte, sprites e trilha: equipe Wavesson02 (hackathon, 2017).
+
+As faixas do seletor de música (Sweet Dreams, Naruto, A Grande Família e a vinheta do gás) são de
+terceiros, guardadas aqui por memória afetiva num repo pessoal e privado. Se o repo ficar público,
+tirar `assets/audio/music/` e `assets/audio/o-gas.m4a` antes.

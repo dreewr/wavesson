@@ -4,7 +4,7 @@ import { Run } from './run.js';
 import { loadImages } from './assets.js';
 import { createRenderer } from './render.js';
 import { createInput } from './input.js';
-import { createAudio } from './audio.js';
+import { createAudio, TRACKS } from './audio.js';
 import { randomSeed } from './rng.js';
 
 const $ = (id) => document.getElementById(id);
@@ -46,14 +46,14 @@ function onEvent(name, data) {
   const s = audio.sfx;
   switch (name) {
     case 'loot': s.loot(data.kind); renderer.float(`+${data.pts}`, data.x + 20, data.y, '#ffe14d'); break;
-    case 'recruit': s.recruit(); if (data.x != null) renderer.float('+1 no bonde', data.x + 17, data.y, '#9cff8a', 24); break;
+    case 'recruit': if (data.n > 1) s.gas(); else s.recruit(); if (data.x != null) renderer.float('+1 no bonde', data.x + 17, data.y, '#9cff8a', 24); break;
     case 'death': s.death(); renderer.shake(14); renderer.float('rodou!', data.x + 17, data.y + 30, '#ff5252', 26); break;
     case 'shield': s.shield(); renderer.float('livrou!', data.x + 17, data.y, '#7fe3ff', 26); break;
     case 'crumble': s.crumble(); break;
     case 'siren': s.siren(); break;
     case 'tideWarn': s.tideWarn(); break;
     case 'tide': s.tide(); renderer.shake(10); break;
-    case 'biome': renderer.float(data.name.toUpperCase(), 800, run.cameraY + 300, '#fff', 64); break;
+    case 'biome': s.gas(); renderer.float(data.name.toUpperCase(), 800, run.cameraY + 300, '#fff', 64); break;
     case 'perk': s.perk(); openPerks(data); break;
     case 'gameover': s.gameover(); setTimeout(openGameOver, 700); break;
   }
@@ -111,6 +111,18 @@ function openGameOver() {
   document.querySelector('#gameover .primary').focus();
 }
 
+function renderTracks() {
+  const list = $('trackList');
+  list.innerHTML = '';
+  for (const t of TRACKS) {
+    const b = document.createElement('button');
+    b.className = 'track' + (t.id === audio.trackId ? ' selected' : '');
+    b.textContent = (t.id === audio.trackId ? '▶ ' : '') + t.name;
+    b.onclick = () => { audio.setTrack(t.id); renderTracks(); };
+    list.appendChild(b);
+  }
+}
+
 function togglePause(force) {
   if (!run || run.over || run.perkChoices) return;
   paused = force ?? !paused;
@@ -127,6 +139,7 @@ function bindUi() {
       case 'daily': return startRun(todaySeed());
       case 'howto': return show('howto');
       case 'credits': return show('credits');
+      case 'music': renderTracks(); return show('music');
       case 'back': return show('menu');
       case 'resume': return togglePause(false);
       case 'again': return startRun();

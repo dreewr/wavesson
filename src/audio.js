@@ -1,20 +1,48 @@
 // Música/ambiente com <audio> e efeitos sintetizados com WebAudio
-// (o projeto original só tinha música e a sirene).
+// (o projeto original só tinha música, a sirene e a vinheta do gás).
 
 const MUTE_KEY = 'wavesson.muted';
+const TRACK_KEY = 'wavesson.track';
 
-function pickTheme() {
+function themeSrc() {
   const probe = document.createElement('audio');
   return probe.canPlayType('audio/ogg; codecs="vorbis"') ? 'assets/audio/theme.ogg' : 'assets/audio/theme.m4a';
 }
 
+// As faixas que a equipe separou na hackathon de 2017.
+export const TRACKS = [
+  { id: 'tema', name: 'Tema do Wavesson', src: themeSrc() },
+  { id: 'sweet', name: 'Sweet Dreams', src: 'assets/audio/music/sweet-dreams.m4a' },
+  { id: 'naruto', name: 'Naruto: The Raising Fighting Spirit', src: 'assets/audio/music/naruto.m4a' },
+  { id: 'familia', name: 'A Grande Família', src: 'assets/audio/music/grande-familia.m4a' },
+  { id: 'aleatorio', name: 'Aleatório (troca a cada run)', src: null },
+];
+
 export function createAudio() {
   let muted = false;
-  try { muted = localStorage.getItem(MUTE_KEY) === '1'; } catch {}
+  let trackId = 'tema';
+  try {
+    muted = localStorage.getItem(MUTE_KEY) === '1';
+    trackId = localStorage.getItem(TRACK_KEY) || 'tema';
+  } catch {}
+  if (!TRACKS.some((t) => t.id === trackId)) trackId = 'tema';
 
-  const music = new Audio(pickTheme());
+  const music = new Audio();
   music.loop = true;
   music.volume = 0.45;
+  const gas = new Audio('assets/audio/o-gas.m4a');
+  gas.volume = 0.7;
+
+  function resolveTrack() {
+    if (trackId !== 'aleatorio') return TRACKS.find((t) => t.id === trackId);
+    const pool = TRACKS.filter((t) => t.src && !music.src.endsWith(t.src));
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function loadTrack() {
+    const t = resolveTrack();
+    if (!music.src.endsWith(t.src)) music.src = t.src;
+  }
+  loadTrack();
   const sea = new Audio('assets/audio/sea.m4a');
   sea.loop = true;
   sea.volume = 0.25;
@@ -69,22 +97,36 @@ export function createAudio() {
     tideWarn: () => tone(110, 0.6, { type: 'sine', vol: 0.15, slide: 40 }),
     tide: () => noise(1.4, 0.25),
     siren: () => { if (!muted) { siren.currentTime = 0; siren.play().catch(() => {}); } },
+    gas: () => { if (!muted) { gas.currentTime = 0; gas.play().catch(() => {}); } },
     gameover: () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.2, { delay: i * 0.15, type: 'sawtooth', vol: 0.07 })),
   };
 
   return {
     sfx,
     startMusic() { play(music); },
-    startGame() { play(music); play(sea); },
+    startGame() {
+      if (trackId === 'aleatorio') { loadTrack(); music.currentTime = 0; }
+      play(music);
+      play(sea);
+    },
+    get trackId() { return trackId; },
+    setTrack(id) {
+      if (!TRACKS.some((t) => t.id === id)) return;
+      trackId = id;
+      try { localStorage.setItem(TRACK_KEY, id); } catch {}
+      loadTrack();
+      music.currentTime = 0;
+      play(music);
+    },
     stopGame() { sea.pause(); },
     get muted() { return muted; },
     toggleMute() {
       muted = !muted;
       try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch {}
-      for (const a of [music, sea, siren]) a.muted = muted;
+      for (const a of [music, sea, siren, gas]) a.muted = muted;
       if (!muted) play(music);
       return muted;
     },
-    init() { for (const a of [music, sea, siren]) a.muted = muted; },
+    init() { for (const a of [music, sea, siren, gas]) a.muted = muted; },
   };
 }
