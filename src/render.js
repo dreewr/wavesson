@@ -94,6 +94,9 @@ export function createRenderer(canvas, images) {
       case 'police':
         drawPolice(run, e, sy);
         return;
+      case 'surfer':
+        drawSurfer(e, sy);
+        return;
       case 'flipflop': case 'phone': case 'bag': {
         const pulse = 1 + Math.sin(e.t * 8) * 0.06;
         const w = e.w * pulse, h = e.h * pulse;
@@ -102,6 +105,52 @@ export function createRenderer(canvas, images) {
       }
       default:
         if (e.sprite) ctx.drawImage(images[e.sprite], e.x, sy, e.w, e.h);
+    }
+  }
+
+  const BOARD_COLORS = ['#ff7043', '#29b6f6', '#ffee58', '#66bb6a', '#ec407a'];
+
+  // Surfista Desatento: um integrante "de sunga" com prancha debaixo do braço
+  // (não havia sprite em 2017; reaproveita a arte do bando + prancha desenhada).
+  function drawSurfer(e, sy) {
+    const skin = CREW_SKINS[e.skin % CREW_SKINS.length];
+    const running = e.state === 'run';
+    const frame = images[`${skin}_${running ? Math.floor(e.t * 12) % 2 : 0}`];
+    const bob = e.state === 'emerge' ? Math.sin(e.t * 14) * 3 : 0;
+    const px = e.x + 58, py = sy + bob;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(e.x + e.w / 2, sy + e.h - 4, 70, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.drawImage(frame, px, py, 34, 100);
+
+    // prancha (bico pra esquerda, pra onde ele corre)
+    const by = py + 52;
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(e.x + 4, by + 11);
+    ctx.quadraticCurveTo(e.x + 20, by - 2, e.x + 60, by);
+    ctx.lineTo(e.x + e.w - 14, by);
+    ctx.quadraticCurveTo(e.x + e.w, by + 11, e.x + e.w - 14, by + 22);
+    ctx.lineTo(e.x + 60, by + 22);
+    ctx.quadraticCurveTo(e.x + 20, by + 24, e.x + 4, by + 11);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = BOARD_COLORS[e.skin % BOARD_COLORS.length];
+    ctx.fillRect(e.x + 30, by + 8, e.w - 50, 6);
+
+    if (e.state === 'emerge') {
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillRect(e.x + 40, sy + e.h - 10, 70, 6);
+      label('!', px + 17, py - 12, '#e53935', 36);
+    } else if (running && Math.floor(e.t * 10) % 2 === 0) {
+      // respingos de areia
+      ctx.fillStyle = 'rgba(141,110,63,0.6)';
+      ctx.fillRect(e.x + e.w - 6, sy + e.h - 12, 6, 6);
+      ctx.fillRect(e.x + e.w + 6, sy + e.h - 20, 5, 5);
     }
   }
 

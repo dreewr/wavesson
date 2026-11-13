@@ -18,7 +18,7 @@ const store = {
   set(v) { try { localStorage.setItem(BEST_KEY, JSON.stringify(v)); } catch {} },
 };
 
-const CAUSES = { left: 'Ficou pra trás', dog: 'Cachorro', lifeguard: 'Salva-vidas', police: 'Viatura', sea: 'Correnteza' };
+const CAUSES = { left: 'Ficou pra trás', dog: 'Cachorro', lifeguard: 'Salva-vidas', surfer: 'Surfista desatento', police: 'Viatura', sea: 'Correnteza' };
 
 let screen = 'loading';
 let run = null;
@@ -65,6 +65,7 @@ function onEvent(name, data) {
     case 'shield': s.shield(); renderer.float('livrou!', data.x + 17, data.y, '#7fe3ff', 26); break;
     case 'crumble': s.crumble(); break;
     case 'siren': s.siren(); break;
+    case 'surfer': s.surfer(); break;
     case 'tideWarn': s.tideWarn(); break;
     case 'tide': s.tide(); renderer.shake(10); break;
     case 'biome': s.gas(); renderer.float(data.name.toUpperCase(), 800, run.cameraY + 300, '#fff', 64); break;

@@ -17,6 +17,9 @@ export const DEFS = {
   castle: { w: 54, h: 80, role: 'slow', hit: { ox: 4, oy: 30, w: 46, h: 48 }, sprites: ['castle'] },
   dog: { w: 90, h: 72, role: 'deadly', hit: { ox: 14, oy: 18, w: 62, h: 48 }, sprites: ['dog_0', 'dog_1'] },
   lifeguard: { w: 50, h: 100, role: 'deadly', hit: { ox: 8, oy: 20, w: 34, h: 76 }, sprites: ['lifeguard'] },
+  // Surfista Desatento: estava na página de inimigos de 2017 mas nunca foi feito.
+  // Sai do mar com a prancha debaixo do braço e atravessa a praia sem olhar.
+  surfer: { w: 150, h: 104, role: 'deadly', hit: { ox: 6, oy: 46, w: 138, h: 54 }, sprites: [] },
   police: { w: 220, h: 100, role: 'deadly', hit: { ox: 8, oy: 10, w: 204, h: 84 }, sprites: [] },
   recruit: { w: 34, h: 100, role: 'recruit', hit: { ox: 0, oy: 10, w: 34, h: 90 }, sprites: [] },
   flipflop: { w: 40, h: 50, role: 'loot', hit: { ox: 0, oy: 0, w: 40, h: 50 }, sprites: ['flipflop_0', 'flipflop_1'], points: 10 },

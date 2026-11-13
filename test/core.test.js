@@ -120,3 +120,29 @@ test('perks respeitam máximo e mexem nos mods', () => {
   run.choosePerk(run.perkChoices[0]);
   assert.equal(run.crew.length, before + 3);
 });
+
+test('surfista desatento sai da água, atravessa a praia e derruba quem estiver no caminho', async () => {
+  const { difficultyAt } = await import('../src/difficulty.js');
+  const events = [];
+  const run = new Run({ seed: 'surf', onEvent: (n, d) => events.push([n, d]) });
+  run.entities = [];
+  run.nextRowY = Infinity; // sem geração: só o surfista
+  const m = run.crew[0];
+  run.crew = [m];
+  run.spawn({ kind: 'surfer', x: 1360, y: run.cameraY + 300, speed: 500, zigzag: false, skin: 0 }, difficultyAt(200));
+  const s = run.entities[0];
+  m.x = 700;
+  m.y = s.y - 20;
+  for (let i = 0; i < 60 * 4 && run.crew.length; i++) {
+    m.y = s.y - 20; // fica parado na linha dele
+    m.x = 700;
+    run.update(1 / 60, { x: 0, y: 0 });
+  }
+  assert.ok(events.some(([n]) => n === 'surfer'), 'surfista nunca começou a correr');
+  assert.ok(run.deaths.surfer === 1, `mortes: ${JSON.stringify(run.deaths)}`);
+});
+
+test('surfista só aparece depois do primeiro trecho', () => {
+  assert.equal(difficultyAt(0).weights.surfer, 0);
+  assert.ok(difficultyAt(200).weights.surfer > 0);
+});

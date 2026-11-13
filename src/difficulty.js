@@ -24,6 +24,8 @@ export function difficultyAt(meters) {
     dogAmp: lerp(140, 380, ramp),
     lifeguardChase: tier >= 4 ? Math.min(160, 60 + (tier - 4) * 15) : 0,
     vendorSpeed: lerp(240, 420, ramp),
+    surferSpeed: lerp(280, 520, ramp) + late * 30,
+    surferZigzag: tier >= 5,
     policeSpeed: lerp(800, 1150, ramp),
     policeWarn: Math.max(0.8, lerp(1.6, 0.9, ramp)), // segundos de aviso
     tideEvery: tier >= 3 ? Math.max(9, 26 - (tier - 3) * 2) : Infinity, // s
@@ -36,6 +38,7 @@ export function difficultyAt(meters) {
       dog: lerp(1.2, 3, ramp),
       vendor: tier >= 1 ? lerp(0.6, 1.4, ramp) : 0,
       lifeguard: tier >= 1 ? lerp(0.6, 1.8, ramp) : 0,
+      surfer: tier >= 1 ? lerp(0.6, 1.6, ramp) : 0,
       police: tier >= 2 ? lerp(0.5, 1.6, ramp) + late * 0.3 : 0,
       combo: tier >= 3 ? lerp(0.4, 2, ramp) + late * 0.5 : 0,
     },

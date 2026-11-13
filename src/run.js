@@ -205,6 +205,17 @@ export class Run {
             }
           }
           break;
+        case 'surfer':
+          // sai da água, para um instante ajeitando a prancha e atravessa a praia sem olhar
+          if (!e.state) e.state = 'waiting';
+          if (e.state === 'waiting' && e.y < viewBottom - 140) { e.state = 'emerge'; e.t = 0; }
+          else if (e.state === 'emerge' && e.t >= 0.7) { e.state = 'run'; e.t = 0; this.emit('surfer', e); }
+          else if (e.state === 'run') {
+            e.x -= e.speed * dt;
+            if (e.zigzag) e.y += Math.sin(e.t * 5) * 140 * dt;
+            if (e.x < -e.w - 40) e.dead = true;
+          }
+          break;
         case 'police':
           if (e.state === 'waiting' && e.y < viewBottom + 60) {
             e.state = 'warn';
@@ -313,6 +324,7 @@ export class Run {
       const role = e.def.role;
       if (role === 'solid' || role === 'decor') continue;
       if (e.kind === 'police' && e.state !== 'drive') continue;
+      if (e.kind === 'surfer' && e.state === 'waiting') continue;
       if (!overlaps(body, box(e, e.def.hit))) continue;
 
       if (role === 'deadly') {

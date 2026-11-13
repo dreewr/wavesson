@@ -23,7 +23,7 @@ Abra http://localhost:5173. Sem build, sem dependências. `?seed=QUALQUERCOISA` 
 | Mapa fixo de 52.000 px montado à mão | Praia infinita gerada por seed, fileira a fileira |
 | Cada regra copiada 6× (uma por integrante, `favelado_1..6`) | Uma lista `crew[]`; o bonde pode ter qualquer tamanho |
 | Dificuldade constante | Velocidade, densidade e perigos crescem com a distância (`src/difficulty.js`) |
-| Só cachorro e salva-vidas matavam | + viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
+| Só cachorro e salva-vidas matavam (o Surfista Desatento estava nas instruções mas nunca foi feito) | + Surfista Desatento de verdade, viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
 | Pontos só por item | Multiplicador pelo tamanho do bonde + vantagens roguelike a cada trecho |
 | — | Recorde local, desafio do dia (seed por data), toque no celular |
 | Menu, instruções, créditos e HUD de texto no topo | Mesmo layout e sprites de 2017; HUD ganhou multiplicador, praia, escudos e barra da próxima vantagem; página extra de instruções com as novidades |

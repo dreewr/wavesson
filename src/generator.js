@@ -98,6 +98,16 @@ const PATTERNS = {
     return [{ kind: 'recruit', x: rng.range(LANE_MIN + 20, ZONE.sandEnd), y, skin: rng.int(0, 4) }];
   },
 
+  surfer(rng, y, diff) {
+    const n = diff.tier >= 4 && rng.chance(0.4) ? 2 : 1;
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      out.push({ kind: 'surfer', x: ZONE.shallow + 10 + i * 40, y: y + i * 130, speed: diff.surferSpeed * rng.range(0.9, 1.1), zigzag: diff.surferZigzag, skin: rng.int(0, 4) });
+    }
+    out.push(...lootLine(rng, y + 30, rng.range(ZONE.sandStart, ZONE.sandEnd - 300), rng.int(2, 4)));
+    return out;
+  },
+
   police(rng, y) {
     return [{ kind: 'police', x: 0, y, dir: rng.chance(0.6) ? 1 : -1 }];
   },

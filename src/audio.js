@@ -96,6 +96,7 @@ export function createAudio() {
     perk: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.12, { delay: i * 0.07, type: 'triangle' })),
     tideWarn: () => tone(110, 0.6, { type: 'sine', vol: 0.15, slide: 40 }),
     tide: () => noise(1.4, 0.25),
+    surfer: () => noise(0.35, 0.12),
     siren: () => { if (!muted) { siren.currentTime = 0; siren.play().catch(() => {}); } },
     gas: () => { if (!muted) { gas.currentTime = 0; gas.play().catch(() => {}); } },
     gameover: () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.2, { delay: i * 0.15, type: 'sawtooth', vol: 0.07 })),
