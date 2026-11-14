@@ -21,17 +21,12 @@ html, body {
 body.in-menu { background: var(--sand); }
 body.in-menu canvas { visibility: hidden; }
 
-/* tudo mora em #root; no celular em pé ele é girado 90° (ver src/screen.js) */
+/* tudo mora em #root; com a tela em pé a classe html.portrait troca o palco pro vertical */
 #root {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   overflow: hidden;
-  transform-origin: top left;
 }
-html.rotated #root { transform: rotate(90deg) translateY(-100%); }
 
 canvas { display: block; position: absolute; inset: 0; }
 
@@ -263,3 +258,44 @@ button.ink:hover, button.ink:focus-visible { color: var(--blue); text-decoration
 }
 #touchDash { right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); width: 110px; height: 110px; border-radius: 50%; color: var(--blue); }
 #touchPause { right: max(16px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); width: 52px; height: 52px; border-radius: 8px; }
+
+/* ------------------------------------------------------------ palco vertical (720x1280) */
+.ponly { display: none; }
+html.portrait .ponly { display: block; }
+html.portrait .lonly { display: none; }
+
+html.portrait .sprite,
+html.portrait .spr {
+  left: calc(var(--px) - var(--pw) / 2);
+  top: calc(var(--py) - var(--ph) / 2);
+  width: var(--pw);
+  height: var(--ph);
+}
+html.portrait .link { left: calc(var(--px) - 150px); top: calc(var(--py) - 24px); }
+html.portrait .menu-sea { top: calc(var(--sh) - 304px); left: -500px; }
+html.portrait #loading p { top: 600px; }
+html.portrait .best { left: 60px; width: 600px; top: 875px; }
+
+/* recorte de uma imagem larga: mostra a região (sx, sy) do original na escala k */
+.crop {
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--px) - var(--pw) / 2);
+  top: calc(var(--py) - var(--ph) / 2);
+  width: var(--pw);
+  height: var(--ph);
+  background-image: var(--img);
+  background-repeat: no-repeat;
+  background-size: calc(var(--iw) * var(--k)) calc(var(--ih) * var(--k));
+  background-position: calc(var(--sx) * var(--k) * -1) calc(var(--sy) * var(--k) * -1);
+}
+
+html.portrait .news { left: 34px; right: 34px; top: 190px; font-size: 24px; }
+html.portrait .news h2 { font-size: 50px; }
+html.portrait .news .cols { grid-template-columns: 1fr; gap: 6px; }
+html.portrait .news .big { font-size: 27px; }
+html.portrait .news .list b { font-size: 26px; }
+html.portrait .news .list span { font-size: 20px; }
+html.portrait .remake { left: 0; right: 0; top: 840px; text-align: center; }
+html.portrait .tracks { left: 50px; top: 320px; width: 620px; }
+html.portrait .track { font-size: 34px; }

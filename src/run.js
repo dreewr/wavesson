@@ -2,11 +2,12 @@
 // O mundo rola para baixo; o bonde acompanha a câmera sozinho (como no
 // original) e o input move cada integrante em relação a ela.
 
-import { VIEW_W, VIEW_H, PX_PER_METER, ZONE, CREW, PERK_FIRST_AT, PERK_STEP, PERK_STEP_GROWTH, BIOMES, BIOME_LENGTH } from './config.js';
+import { PX_PER_METER, CREW, PERK_FIRST_AT, PERK_STEP, PERK_STEP_GROWTH, BIOMES, BIOME_LENGTH } from './config.js';
 import { DEFS, CREW_SKINS } from './defs.js';
 import { createRng } from './rng.js';
 import { difficultyAt } from './difficulty.js';
 import { generateRow } from './generator.js';
+import { LANDSCAPE } from './layout.js';
 import { baseMods, rollPerkChoices } from './perks.js';
 import { overlaps, pushOut, box, clamp, center } from './geom.js';
 
@@ -23,13 +24,14 @@ export const RUSH = { seconds: 9, lootMult: 2 };
 export const DANGER_MARGIN = 70;
 
 export class Run {
-  constructor({ seed, onEvent = () => {} }) {
+  constructor({ seed, onEvent = () => {}, layout = LANDSCAPE }) {
     this.seed = seed;
+    this.layout = layout;
     this.rng = createRng(seed);
     this.emit = onEvent;
     this.time = 0;
     this.cameraY = 0;
-    this.nextRowY = VIEW_H + 120;
+    this.nextRowY = layout.h + 120;
     this.entities = [];
     this.crew = [];
     this.score = 0;
@@ -53,7 +55,7 @@ export class Run {
 
     // formação inicial, parecida com a do layout Track de 2017
     for (let i = 0; i < CREW.startSize; i++) {
-      this.addMember(720 + (i % 3) * 70 + (i > 2 ? 35 : 0), 260 + Math.floor(i / 3) * 90, i % CREW_SKINS.length);
+      this.addMember(layout.start.x + (i % 3) * 70 + (i > 2 ? 35 : 0), layout.start.y + Math.floor(i / 3) * 90, i % CREW_SKINS.length);
     }
   }
 
@@ -83,7 +85,8 @@ export class Run {
   }
 
   get waterline() {
-    return { shallow: ZONE.shallow + this.tide.offset, deep: ZONE.deep + this.tide.offset };
+    const z = this.layout.zone;
+    return { shallow: z.shallow + this.tide.offset, deep: z.deep + this.tide.offset };
   }
 
   addMember(x, y, skin = this.rng.int(0, CREW_SKINS.length - 1)) {
@@ -92,9 +95,10 @@ export class Run {
   }
 
   recruitMany(n) {
-    const c = this.crewCenter() || { x: VIEW_W / 2, y: this.cameraY + VIEW_H / 2 };
+    const L = this.layout;
+    const c = this.crewCenter() || { x: L.w / 2, y: this.cameraY + L.h / 2 };
     for (let i = 0; i < n; i++) {
-      this.addMember(clamp(c.x + this.rng.range(-80, 80), 20, ZONE.sandEnd), c.y + this.rng.range(-60, 40));
+      this.addMember(clamp(c.x + this.rng.range(-80, 80), 20, L.zone.sandEnd), c.y + this.rng.range(-60, 40));
     }
     this.recruited += n;
     this.emit('recruit', { n });
@@ -127,7 +131,8 @@ export class Run {
     const before = this.meters;
     const diff = (this.diff = difficultyAt(before));
 
-    this.cameraY += diff.scrollSpeed * dt;
+    this.scroll = diff.scrollSpeed * this.layout.speedMult;
+    this.cameraY += this.scroll * dt;
     this.score += (this.meters - before) * this.mods.scoreMult;
 
     this.dash.t = Math.max(0, this.dash.t - dt);
@@ -170,7 +175,7 @@ export class Run {
     this.rush.t = RUSH.seconds;
     // as fileiras ainda não geradas dentro da janela da Hora viram fartura
     this.rush.fromY = this.nextRowY;
-    this.rush.toY = this.cameraY + VIEW_H + diff.scrollSpeed * RUSH.seconds;
+    this.rush.toY = this.cameraY + this.layout.h + diff.scrollSpeed * this.layout.speedMult * RUSH.seconds;
     this.emit('rush');
   }
 
@@ -181,12 +186,12 @@ export class Run {
   }
 
   spawnAhead() {
-    while (this.nextRowY < this.cameraY + VIEW_H + 400) {
+    while (this.nextRowY < this.cameraY + this.layout.h + 400) {
       const diff = difficultyAt(this.nextRowY / PX_PER_METER);
       const rush = this.nextRowY >= this.rush.fromY && this.nextRowY < this.rush.toY;
-      const { specs } = generateRow(this.rng, this.nextRowY, diff, { recruitBoost: this.recruitBoost, rush });
+      const { specs } = generateRow(this.rng, this.nextRowY, diff, { recruitBoost: this.recruitBoost, rush, layout: this.layout });
       for (const s of specs) this.spawn(s, diff);
-      this.nextRowY += diff.rowGap * this.rng.range(0.8, 1.2);
+      this.nextRowY += diff.rowGap * this.layout.rowGapMult * this.rng.range(0.8, 1.2);
     }
   }
 
@@ -199,7 +204,7 @@ export class Run {
       e.state = 'waiting';
       e.speed = diff.policeSpeed;
       e.warn = diff.policeWarn;
-      e.x = e.dir > 0 ? -def.w - 40 : VIEW_W + 40;
+      e.x = e.dir > 0 ? -def.w - 40 : this.layout.w + 40;
     }
     this.entities.push(e);
   }
@@ -220,7 +225,7 @@ export class Run {
   updateSquad(q, dt) {
     if (q.tick === this.time) return;
     q.tick = this.time;
-    const viewBottom = this.cameraY + VIEW_H;
+    const viewBottom = this.cameraY + this.layout.h;
     if (q.state === 'waiting') {
       if (q.y < viewBottom + 400) { q.state = 'warn'; q.t = 0; this.emit('squadWarn', q); }
       return;
@@ -249,7 +254,7 @@ export class Run {
       if (this.time >= this.nextTideAt) {
         tide.phase = 'warn';
         tide.t = 0;
-        tide.reach = diff.tideReach;
+        tide.reach = diff.tideReach * this.layout.tideScale;
         this.emit('tideWarn');
       }
       return;
@@ -272,7 +277,7 @@ export class Run {
   }
 
   updateEntities(dt, diff) {
-    const viewBottom = this.cameraY + VIEW_H;
+    const viewBottom = this.cameraY + this.layout.h;
     for (const e of this.entities) {
       e.t += dt;
       const onScreen = e.y < viewBottom && e.y + e.h > this.cameraY;
@@ -322,7 +327,7 @@ export class Run {
             e.state = 'drive';
           } else if (e.state === 'drive') {
             e.x += e.dir * e.speed * dt;
-            if ((e.dir > 0 && e.x > VIEW_W + 60) || (e.dir < 0 && e.x < -e.w - 60)) e.dead = true;
+            if ((e.dir > 0 && e.x > this.layout.w + 60) || (e.dir < 0 && e.x < -e.w - 60)) e.dead = true;
           }
           break;
         case 'loot':
@@ -373,9 +378,9 @@ export class Run {
       const slowed = !this.mods.slowImmune && (m.slowT > 0 || inShallow);
       const f = slowed ? 0.5 : 1;
       m.x += dx * speed * f * dt;
-      m.y += (diff.scrollSpeed * (slowed ? 0.8 : 1) + dy * speed * f) * dt;
-      m.x = clamp(m.x, 0, VIEW_W - CREW.w);
-      m.y = Math.min(m.y, this.cameraY + VIEW_H - CREW.h - 4);
+      m.y += (this.scroll * (slowed ? 0.8 : 1) + dy * speed * f) * dt;
+      m.x = clamp(m.x, 0, this.layout.w - CREW.w);
+      m.y = Math.min(m.y, this.cameraY + this.layout.h - CREW.h - 4);
       m.moving = len > 0.1 || dashing;
       m.dashing = dashing;
     }

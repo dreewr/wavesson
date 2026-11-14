@@ -1,45 +1,39 @@
-// Celular em pé: o jogo é horizontal (1600x720), então em tela de toque na
-// vertical giramos tudo 90° dentro de #root e o jogo ocupa a tela inteira
-// (é só virar o aparelho, mesmo com a rotação travada).
+// Escolhe o enquadramento pelo formato da tela: em pé → layout vertical
+// (praia estreita e alta), deitado → layout horizontal original de 2017.
+// Os menus também têm as duas versões (classe `portrait` no <html>).
 
-const portraitTouch = () =>
-  matchMedia('(pointer: coarse)').matches && innerHeight > innerWidth;
+import { makeLayout } from './layout.js';
 
-let rotated = false;
-
-export function isRotated() {
-  return rotated;
+export function isPortrait() {
+  return innerHeight > innerWidth * 1.1;
 }
 
-// tamanho da área do jogo em px CSS, já considerando o giro
 export function viewport() {
-  return rotated ? { w: innerHeight, h: innerWidth } : { w: innerWidth, h: innerHeight };
+  return { w: innerWidth, h: innerHeight };
 }
 
-// coordenadas de tela (clientX/Y) → coordenadas dentro de #root
-export function toLocal(clientX, clientY) {
-  return rotated ? { x: clientY, y: innerWidth - clientX } : { x: clientX, y: clientY };
+// Layout pra uma run nova, já com a altura certa pra tela atual.
+export function layoutForScreen() {
+  return isPortrait() ? makeLayout('portrait', (720 * innerHeight) / innerWidth) : makeLayout('landscape');
+}
+
+// tamanho do palco dos menus em cada orientação
+export function stageSize() {
+  return isPortrait() ? { w: 720, h: 1280 } : { w: 1600, h: 720 };
 }
 
 export function applyOrientation() {
-  rotated = portraitTouch();
-  const root = document.getElementById('root');
-  if (!root) return;
-  const { w, h } = viewport();
-  root.style.width = `${w}px`;
-  root.style.height = `${h}px`;
-  document.documentElement.classList.toggle('rotated', rotated);
+  document.documentElement.classList.toggle('portrait', isPortrait());
 }
 
-// Android: tela cheia + trava na horizontal (aí nem precisa girar). iOS ignora.
-export async function tryLandscapeFullscreen() {
+// Android: tela cheia pra esconder a barra do navegador. iOS ignora.
+export async function tryFullscreen() {
   if (!matchMedia('(pointer: coarse)').matches) return;
   try {
     if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
       await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
     }
-    await screen.orientation?.lock?.('landscape');
   } catch {
-    // sem suporte: segue com o giro via CSS
+    // sem suporte: segue normal
   }
 }

@@ -262,3 +262,43 @@ test('paredão de bombeiros sempre deixa um buraco e quem passa nele ganha bônu
   assert.ok(!run.deaths.bombeiro, JSON.stringify(run.deaths));
   assert.ok(events.some(([n]) => n === 'dodge'), 'passou liso deveria dar bônus');
 });
+
+// ------------------------------------------------------------ layout vertical
+import { makeLayout } from '../src/layout.js';
+
+test('layout vertical: tudo é gerado dentro da praia estreita e sólidos deixam passagem', () => {
+  const L = makeLayout('portrait', 1560);
+  const rng = createRng('vertical');
+  for (let i = 0; i < 3000; i++) {
+    const diff = difficultyAt(rng.range(0, 5000));
+    const { specs } = generateRow(rng, i * 200, diff, { layout: L });
+    for (const s of specs) {
+      if (s.kind === 'police' || s.kind === 'squad') continue;
+      assert.ok(s.x >= -1 && s.x <= L.w, `${s.kind} fora da tela: x=${s.x}`);
+      if (s.kind === 'dog') assert.ok(s.x - s.amp >= L.laneMin - 1 && s.x + s.amp <= L.laneMax + 1, 'cachorro sai da faixa');
+    }
+    const squad = specs.find((s) => s.kind === 'squad');
+    if (squad) for (const m of squad.members) assert.ok(m.dx >= 0 && m.dx + 44 <= L.w, 'bombeiro fora da tela');
+  }
+  for (let i = 0; i < 1500; i++) {
+    const gw = rng.range(150, 260);
+    const { gap, solids } = placeSolids(rng, rng.int(1, 6), gw, L);
+    assert.ok(gap.from >= L.laneMin - 1e-6 && gap.to <= L.laneMax + 1e-6);
+    for (const s of solids) {
+      const h = DEFS[s.kind].hit;
+      assert.ok(s.x + h.ox + h.w <= gap.from || s.x + h.ox >= gap.to);
+    }
+  }
+});
+
+test('layout vertical: run roda, mantém o bando na tela e acaba se ficar parado', () => {
+  const L = makeLayout('portrait', 1400);
+  const run = new Run({ seed: 'em-pé', layout: L });
+  assert.ok(run.crew.every((m) => m.x >= 0 && m.x + 34 <= L.w));
+  for (let i = 0; i < 60 * 600 && !run.over; i++) {
+    if (run.perkChoices) run.choosePerk(run.perkChoices[0]);
+    run.update(1 / 60, { x: 1, y: 0 });
+    for (const m of run.crew) assert.ok(m.x <= L.w - 34 + 1e-6);
+  }
+  assert.ok(run.over);
+});

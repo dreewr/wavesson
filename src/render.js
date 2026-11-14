@@ -1,17 +1,39 @@
 // Desenho no canvas. Lê o estado da Run, nunca o altera.
 
-import { VIEW_W, VIEW_H, ZONE, CREW } from './config.js';
+import { CREW } from './config.js';
+import { LANDSCAPE } from './layout.js';
 import { CREW_SKINS } from './defs.js';
 import { viewport } from './screen.js';
 import { PERKS as PERK_LIST } from './perks.js';
 import { RUSH } from './run.js';
 
-const SEA_X = 610; // onde o sprite do mar (1024px) começa, como no layout original
 const DEEP_BLUE = '#10298f';
+const TOUCH = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+// a água começa ~740px pra dentro do sprite do mar (1024px); no layout original ele ficava em x=610
+const SEA_EDGE_IN_SPRITE = 740;
+
+// Onde fica cada peça da HUD em cada enquadramento. O bilhete é desenhado nas
+// coordenadas do layout horizontal e só transladado/escalado pro vertical.
+const HUD = {
+  landscape: { cardX: 620, cardY: 12, cardS: 1, comboX: 1185, comboY: 70, rushY: 300, tagSize: 18 },
+  portrait: { cardX: 10, cardY: 10, cardS: 0.9, comboX: 30, comboY: 300, rushY: 420, tagSize: 15 },
+};
 
 export function createRenderer(canvas, images) {
   const ctx = canvas.getContext('2d');
   const view = { scale: 1, ox: 0, oy: 0 };
+  // tamanho do mundo visível: vem do layout da run que está sendo desenhada
+  let VIEW_W = LANDSCAPE.w, VIEW_H = LANDSCAPE.h, ZONE = LANDSCAPE.zone, hud = HUD.landscape;
+
+  function useLayout(L) {
+    VIEW_W = L.w;
+    VIEW_H = L.h;
+    ZONE = L.zone;
+    hud = HUD[L.kind] || HUD.landscape;
+    view.scale = Math.min(canvas.width / VIEW_W, canvas.height / VIEW_H);
+    view.ox = (canvas.width - VIEW_W * view.scale) / 2;
+    view.oy = (canvas.height - VIEW_H * view.scale) / 2;
+  }
   const floaters = []; // "+100", "RODOU!" etc
   let shake = 0;
 
@@ -22,9 +44,6 @@ export function createRenderer(canvas, images) {
     canvas.height = Math.round(h * dpr);
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
-    view.scale = Math.min(w / VIEW_W, h / VIEW_H) * dpr;
-    view.ox = (canvas.width - VIEW_W * view.scale) / 2;
-    view.oy = (canvas.height - VIEW_H * view.scale) / 2;
   }
   addEventListener('resize', resize);
   resize();
@@ -54,7 +73,7 @@ export function createRenderer(canvas, images) {
     // mar animado; a onda empurra tudo pra esquerda
     const off = run.tide.offset;
     const sea = images[`sea_${Math.floor(run.time * 5) % 6}`];
-    const seaX = SEA_X + off;
+    const seaX = ZONE.shallow - SEA_EDGE_IN_SPRITE + off;
     for (let y = -(cam % 1024); y < VIEW_H; y += 1024) ctx.drawImage(sea, seaX, y, 1024, 1024);
     if (seaX + 1024 < VIEW_W) {
       ctx.fillStyle = DEEP_BLUE;
@@ -360,7 +379,7 @@ export function createRenderer(canvas, images) {
 
   function drawCombo(run) {
     if (run.combo.n < 2) return;
-    const x = 1185, y = 70;
+    const x = hud.comboX, y = hud.comboY;
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(0.06);
@@ -376,7 +395,9 @@ export function createRenderer(canvas, images) {
 
   function drawSide(run, best) {
     // recorde + vantagens pegas, em etiquetinhas de papel no canto direito
-    let y = 18;
+    // em tela de toque o botão de pausa (DOM) fica no canto: as etiquetas descem
+    const cssPerWorld = view.scale / (canvas.width / Math.max(1, canvas.clientWidth || innerWidth));
+    let y = TOUCH ? 80 / cssPerWorld : 18;
     const tag = (t, color = INK, size = 20) => {
       ctx.font = `700 ${size}px ${HAND}`;
       const w = ctx.measureText(t).width + 22;
@@ -384,10 +405,10 @@ export function createRenderer(canvas, images) {
       text(t, VIEW_W - 29, y + size + 4, { size, color, align: 'right' });
       y += size + 22;
     };
-    if (best > 0) tag(`recorde ${fmt(best)}`, '#777', 18);
+    if (best > 0) tag(`recorde ${fmt(best)}`, "#777", hud.tagSize);
     for (const p of PERK_LIST) {
       const lvl = run.taken[p.id];
-      if (lvl) tag(lvl > 1 ? `${p.name} ×${lvl}` : p.name, BLUE, 18);
+      if (lvl) tag(lvl > 1 ? `${p.name} ×${lvl}` : p.name, BLUE, hud.tagSize);
     }
   }
 
@@ -410,7 +431,7 @@ export function createRenderer(canvas, images) {
 
   function drawDash(run) {
     const ready = run.dash.cd === 0;
-    const X = 20, Y = 628, W = 210, H = 74;
+    const X = 20, Y = VIEW_H - 92, W = 210, H = 74;
     paper(X, Y, W, H, 0.015);
     const p = 1 - run.dash.cd / run.dashCooldown;
     text(ready ? 'PIQUE!' : 'pique', X + 16, Y + 38, { size: 30, color: ready ? BLUE : '#999', italic: ready });
@@ -428,7 +449,7 @@ export function createRenderer(canvas, images) {
       // anúncio grande, some pra não tapar o bando
       ctx.save();
       ctx.globalAlpha = Math.min(1, (2 - elapsed) * 2);
-      ctx.translate(VIEW_W / 2, 300);
+      ctx.translate(VIEW_W / 2, hud.rushY);
       ctx.rotate(Math.sin(run.time * 6) * 0.03);
       const s = 1 + Math.max(0, 0.3 - elapsed) * 1.5;
       ctx.scale(s, s);
@@ -436,7 +457,11 @@ export function createRenderer(canvas, images) {
       text('pontos em dobro', 0, 38, { size: 26, color: INK, stroke: '#fff', align: 'center' });
       ctx.restore();
     }
-    // lembrete compacto embaixo do bilhete
+  }
+
+  // lembrete compacto embaixo do bilhete (desenhado dentro da transformação do bilhete)
+  function drawRushNote(run) {
+    if (run.rush.t <= 0) return;
     paper(760, 246, 220, 40, 0.02);
     text(`Hora do Arrastão · ${Math.ceil(run.rush.t)}s`, 870, 274, { size: 21, color: BLUE, align: 'center' });
   }
@@ -516,10 +541,17 @@ export function createRenderer(canvas, images) {
     drawDanger(run);
     drawSquadWarnings(run);
     // o bilhete fica translúcido quando tem gente do bando passando por baixo
-    ctx.globalAlpha = crewUnder(run, 615, 0, 1125, 212) ? 0.35 : 1;
+    const s = hud.cardS;
+    const under = crewUnder(run, hud.cardX - 5, 0, hud.cardX + 505 * s, hud.cardY + 200 * s);
+    ctx.save();
+    ctx.globalAlpha = under ? 0.35 : 1;
+    ctx.translate(hud.cardX, hud.cardY);
+    ctx.scale(s, s);
+    ctx.translate(-620, -12);
     drawCard(run);
     drawShields(run);
-    ctx.globalAlpha = 1;
+    drawRushNote(run);
+    ctx.restore();
     drawCombo(run);
     drawSide(run, best);
     drawDash(run);
@@ -567,6 +599,7 @@ export function createRenderer(canvas, images) {
     float,
     shake(amount) { shake = Math.max(shake, amount); },
     draw(run, dt, { best = 0, stick } = {}) {
+      useLayout(run.layout);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);

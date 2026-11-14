@@ -6,7 +6,7 @@ import { createRenderer } from './render.js';
 import { createInput } from './input.js';
 import { createAudio, TRACKS } from './audio.js';
 import { randomSeed } from './rng.js';
-import { applyOrientation, viewport, tryLandscapeFullscreen } from './screen.js';
+import { applyOrientation, stageSize, layoutForScreen, tryFullscreen } from './screen.js';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('game');
@@ -37,9 +37,15 @@ function show(id) {
 
 function fitStage() {
   applyOrientation();
-  const { w, h } = viewport();
-  const s = Math.min(w / 1600, h / 720);
-  document.getElementById('stage').style.setProperty('--s', s);
+  const st = stageSize();
+  // no vertical o palco cresce com telas mais altas que 16:9 (mar e botões ficam ancorados embaixo)
+  if (st.w === 720) st.h = Math.max(1280, Math.round((720 * innerHeight) / innerWidth));
+  const s = Math.min(innerWidth / st.w, innerHeight / st.h);
+  const stage = document.getElementById('stage');
+  stage.style.setProperty('--s', s);
+  stage.style.setProperty('--sh', `${st.h}px`);
+  stage.style.width = `${st.w}px`;
+  stage.style.height = `${st.h}px`;
 }
 
 function howtoPage(delta) {
@@ -74,10 +80,10 @@ function onEvent(name, data) {
     case 'surfer': s.surfer(); break;
     case 'squadWarn': s.whistle(); break;
     case 'squadRun': s.stomp(); renderer.shake(5); break;
-    case 'dodge': s.dodge(); renderer.float(`passou liso! +${data.pts}`, 870, run.cameraY + 320, '#9cff8a', 34); break;
+    case 'dodge': s.dodge(); renderer.float(`passou liso! +${data.pts}`, run.layout.w / 2, run.cameraY + 320, '#9cff8a', 34); break;
     case 'tideWarn': s.tideWarn(); break;
     case 'tide': s.tide(); renderer.shake(10); break;
-    case 'biome': s.gas(); renderer.float(data.name.toUpperCase(), 800, run.cameraY + 300, '#fff', 64); break;
+    case 'biome': s.gas(); renderer.float(data.name.toUpperCase(), run.layout.w / 2, run.cameraY + 300, '#fff', 64); break;
     case 'perk': s.perk(); openPerks(data); break;
     case 'gameover': s.gameover(); setTimeout(openGameOver, 700); break;
   }
@@ -85,7 +91,7 @@ function onEvent(name, data) {
 
 function startRun(seed = randomSeed()) {
   document.activeElement?.blur?.();
-  run = new Run({ seed, onEvent });
+  run = new Run({ seed, onEvent, layout: layoutForScreen() });
   paused = false;
   audio.startGame();
   show(null);
@@ -161,8 +167,8 @@ function bindUi() {
     if (!action) return;
     audio.startMusic();
     switch (action) {
-      case 'play': tryLandscapeFullscreen(); return startRun();
-      case 'daily': tryLandscapeFullscreen(); return startRun(todaySeed());
+      case 'play': tryFullscreen(); return startRun();
+      case 'daily': tryFullscreen(); return startRun(todaySeed());
       case 'howto': $('howto').dataset.page = 1; return show('howto');
       case 'next': return howtoPage(1);
       case 'prev': return howtoPage(-1);

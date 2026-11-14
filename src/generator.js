@@ -3,26 +3,32 @@
 // Garantia de jogabilidade: fileiras com sólidos sempre deixam ao menos uma
 // passagem de largura >= diff.gapWidth.
 
-import { ZONE } from './config.js';
+// O enquadramento (largura da praia, faixas) vem de `layout` — ver layout.js.
+
 import { DEFS } from './defs.js';
+import { LANDSCAPE } from './layout.js';
 
-export const LANE_MIN = 10;
-export const LANE_MAX = ZONE.shallow - 30;
+export const LANE_MIN = LANDSCAPE.laneMin;
+export const LANE_MAX = LANDSCAPE.laneMax;
 
-function solidKindAt(rng, x, width) {
-  if (x + width <= ZONE.walkEnd + 10) return 'palm';
-  return rng.chance(0.25) && x > ZONE.sandStart ? 'net' : 'umbrella';
+function solidKindAt(rng, x, L) {
+  if (x <= Math.max(10, L.zone.walkEnd - 120)) return 'palm';
+  return rng.chance(0.25) && x > L.zone.sandStart ? 'net' : 'umbrella';
 }
 
+// amplitude máxima do cachorro pra ele caber na faixa jogável
+const maxDogAmp = (L) => (L.laneMax - L.laneMin) / 2 - 60;
+
 // Escolhe a passagem e preenche o resto com até `count` sólidos sem invadi-la.
-export function placeSolids(rng, count, gapWidth) {
+export function placeSolids(rng, count, gapWidth, L = LANDSCAPE) {
+  const LANE_MIN = L.laneMin, LANE_MAX = L.laneMax;
   const gapCenter = rng.range(LANE_MIN + gapWidth / 2, LANE_MAX - gapWidth / 2);
   const gap = { from: gapCenter - gapWidth / 2, to: gapCenter + gapWidth / 2 };
   const placed = [];
   let tries = 0;
   while (placed.length < count && tries++ < count * 12) {
     const probe = rng.range(LANE_MIN, LANE_MAX);
-    const kind = solidKindAt(rng, probe, 130);
+    const kind = solidKindAt(rng, probe, L);
     const d = DEFS[kind];
     const x = Math.min(probe, LANE_MAX - d.w);
     const hx = x + d.hit.ox;
@@ -41,85 +47,85 @@ function lootLine(rng, y, x0, n, kind = 'flipflop') {
 }
 
 const PATTERNS = {
-  solids(rng, y, diff) {
+  solids(rng, y, diff, L) {
     const count = rng.int(2, 3 + Math.min(3, diff.tier));
-    const { gap, solids } = placeSolids(rng, count, diff.gapWidth);
+    const { gap, solids } = placeSolids(rng, count, diff.gapWidth, L);
     const out = solids.map((s) => ({ ...s, y: y - DEFS[s.kind].hit.oy }));
     // um mimo na passagem
     if (rng.chance(0.5)) out.push({ kind: 'phone', x: (gap.from + gap.to) / 2 - 12, y: y - 10 });
     return out;
   },
 
-  castles(rng, y, diff) {
+  castles(rng, y, diff, L) {
     const out = [];
     const n = rng.int(2, 4 + Math.min(2, diff.tier));
     for (let i = 0; i < n; i++) {
-      out.push({ kind: 'castle', x: rng.range(ZONE.sandStart, ZONE.sandEnd - 60), y: y + rng.range(-40, 40) });
+      out.push({ kind: 'castle', x: rng.range(L.zone.sandStart, L.zone.sandEnd - 60), y: y + rng.range(-40, 40) });
     }
     // recompensa atrás dos castelos
-    out.push({ kind: rng.chance(0.3) ? 'bag' : 'phone', x: rng.range(ZONE.sandStart, ZONE.sandEnd - 60), y: y + 60 });
+    out.push({ kind: rng.chance(0.3) ? 'bag' : 'phone', x: rng.range(L.zone.sandStart, L.zone.sandEnd - 60), y: y + 60 });
     return out;
   },
 
-  dog(rng, y, diff, count = 1) {
+  dog(rng, y, diff, L) {
     const out = [];
-    for (let i = 0; i < count; i++) {
-      const amp = diff.dogAmp * rng.range(0.7, 1.1);
-      const cx = rng.range(LANE_MIN + amp + 45, LANE_MAX - amp - 45);
+    for (let i = 0; i < 1; i++) {
+      const amp = Math.min(diff.dogAmp * rng.range(0.7, 1.1), maxDogAmp(L));
+      const cx = rng.range(L.laneMin + amp + 45, L.laneMax - amp - 45);
       out.push({ kind: 'dog', x: cx, y: y + i * 90, amp, speed: diff.dogSpeed * rng.range(0.85, 1.15), phase: rng.range(0, Math.PI * 2) });
     }
-    out.push(...lootLine(rng, y + 40, rng.range(ZONE.sandStart, ZONE.sandEnd - 250), rng.int(2, 4)));
+    out.push(...lootLine(rng, y + 40, rng.range(L.zone.sandStart, L.zone.sandEnd - 250), rng.int(2, 4)));
     return out;
   },
 
-  vendor(rng, y, diff) {
-    return [{ kind: 'vendor', x: rng.range(ZONE.sandStart, ZONE.sandEnd - 100), y, speed: diff.vendorSpeed }];
+  vendor(rng, y, diff, L) {
+    return [{ kind: 'vendor', x: rng.range(L.zone.sandStart, L.zone.sandEnd - 100), y, speed: diff.vendorSpeed }];
   },
 
-  lifeguard(rng, y, diff) {
+  lifeguard(rng, y, diff, L) {
     const out = [];
     const n = diff.tier >= 3 ? rng.int(1, 3) : 1;
     for (let i = 0; i < n; i++) {
-      const x = rng.range(ZONE.sandStart + 40, ZONE.shallow - 60);
+      const x = rng.range(L.zone.sandStart + 40, L.zone.shallow - 60);
       out.push({ kind: 'lifeguard', x, y: y + rng.range(-30, 30), chase: diff.lifeguardChase });
       if (rng.chance(0.6)) out.push({ kind: 'bag', x: x + rng.pick([-90, 90]), y: y + 20 });
     }
     return out;
   },
 
-  loot(rng, y) {
-    const out = lootLine(rng, y, rng.range(LANE_MIN, ZONE.sandEnd - 350), rng.int(3, 6));
-    if (rng.chance(0.4)) out.push({ kind: 'phone', x: rng.range(ZONE.sandStart, ZONE.sandEnd), y: y + 70 });
-    if (rng.chance(0.15)) out.push({ kind: 'bag', x: rng.range(ZONE.shallow - 120, ZONE.deep - 40), y: y + 40 }); // isca no raso
+  loot(rng, y, diff, L) {
+    const out = lootLine(rng, y, rng.range(L.laneMin, L.zone.sandEnd - 350), rng.int(3, 6));
+    if (rng.chance(0.4)) out.push({ kind: 'phone', x: rng.range(L.zone.sandStart, L.zone.sandEnd), y: y + 70 });
+    if (rng.chance(0.15)) out.push({ kind: 'bag', x: rng.range(L.zone.shallow - 120, L.zone.deep - 40), y: y + 40 }); // isca no raso
     return out;
   },
 
-  recruit(rng, y) {
-    return [{ kind: 'recruit', x: rng.range(LANE_MIN + 20, ZONE.sandEnd), y, skin: rng.int(0, 4) }];
+  recruit(rng, y, diff, L) {
+    return [{ kind: 'recruit', x: rng.range(L.laneMin + 20, L.zone.sandEnd), y, skin: rng.int(0, 4) }];
   },
 
-  surfer(rng, y, diff) {
+  surfer(rng, y, diff, L) {
     const n = diff.tier >= 4 && rng.chance(0.4) ? 2 : 1;
     const out = [];
     for (let i = 0; i < n; i++) {
-      out.push({ kind: 'surfer', x: ZONE.shallow + 10 + i * 40, y: y + i * 130, speed: diff.surferSpeed * rng.range(0.9, 1.1), zigzag: diff.surferZigzag, skin: rng.int(0, 4) });
+      out.push({ kind: 'surfer', x: L.zone.shallow + 10 + i * 40, y: y + i * 130, speed: diff.surferSpeed * rng.range(0.9, 1.1), zigzag: diff.surferZigzag, skin: rng.int(0, 4) });
     }
-    out.push(...lootLine(rng, y + 30, rng.range(ZONE.sandStart, ZONE.sandEnd - 300), rng.int(2, 4)));
+    out.push(...lootLine(rng, y + 30, rng.range(L.zone.sandStart, L.zone.sandEnd - 300), rng.int(2, 4)));
     return out;
   },
 
   // Bombeiros: coluna estreita, "V" ou um paredão com um buraco pra passar.
-  squad(rng, y, diff) {
+  squad(rng, y, diff, L) {
     const STEP = 62;
     const forms = diff.tier >= 3 ? ['column', 'vee', 'wall', 'wall'] : ['column', 'vee', 'wall'];
     const form = rng.pick(forms);
     const members = [];
     if (form === 'column') {
-      const x = rng.range(LANE_MIN + 20, ZONE.sandEnd - 60);
+      const x = rng.range(L.laneMin + 20, L.zone.sandEnd - 60);
       const n = rng.int(3, 4 + Math.min(3, diff.tier));
       for (let i = 0; i < n; i++) members.push({ dx: x + (i % 2) * 14, dy: i * 80 });
     } else if (form === 'vee') {
-      const cx = rng.range(LANE_MIN + 220, ZONE.sandEnd - 220);
+      const cx = rng.range(L.laneMin + 220, L.zone.sandEnd - 220);
       const arms = rng.int(2, 3);
       members.push({ dx: cx, dy: 0 });
       for (let i = 1; i <= arms; i++) {
@@ -127,8 +133,8 @@ const PATTERNS = {
         members.push({ dx: cx + i * STEP, dy: i * 70 });
       }
     } else {
-      const width = Math.min(1150, 520 + diff.tier * 90);
-      const x0 = rng.range(LANE_MIN, Math.max(LANE_MIN, ZONE.sandEnd - width));
+      const width = Math.min(1150, 520 + diff.tier * 90, L.laneMax - L.laneMin - 20);
+      const x0 = rng.range(L.laneMin, Math.max(L.laneMin, L.zone.sandEnd - width));
       const gapW = diff.gapWidth + 50;
       const gap = rng.range(x0 + STEP + 10, x0 + width - gapW - STEP - 10); // buraco sempre no meio
       for (let x = x0; x <= x0 + width; x += STEP) {
@@ -139,17 +145,20 @@ const PATTERNS = {
     return [{ kind: 'squad', x: 0, y, form, members, speed: diff.squadSpeed, warn: diff.squadWarn }];
   },
 
-  police(rng, y) {
+  police(rng, y, diff, L) {
     return [{ kind: 'police', x: 0, y, dir: rng.chance(0.6) ? 1 : -1 }];
   },
 
-  combo(rng, y, diff) {
+  combo(rng, y, diff, L) {
     // sólidos + cachorro patrulhando a passagem
-    const { gap, solids } = placeSolids(rng, rng.int(3, 5), diff.gapWidth + 40);
+    const { gap, solids } = placeSolids(rng, rng.int(3, 5), diff.gapWidth + 40, L);
     const out = solids.map((s) => ({ ...s, y: y - DEFS[s.kind].hit.oy }));
-    const cx = (gap.from + gap.to) / 2;
-    out.push({ kind: 'dog', x: cx, y: y + 80, amp: Math.min(diff.dogAmp, 220), speed: diff.dogSpeed, phase: rng.range(0, 6.28) });
-    out.push({ kind: 'bag', x: cx - 30, y: y + 20 });
+    const amp = Math.min(diff.dogAmp, 220, maxDogAmp(L));
+    const mid = (gap.from + gap.to) / 2;
+    // o cachorro patrulha a passagem, mas sem sair da faixa jogável
+    const cx = Math.min(Math.max(mid, L.laneMin + amp + 45), L.laneMax - amp - 45);
+    out.push({ kind: 'dog', x: cx, y: y + 80, amp, speed: diff.dogSpeed, phase: rng.range(0, 6.28) });
+    out.push({ kind: 'bag', x: mid - 30, y: y + 20 });
     return out;
   },
 };
@@ -157,14 +166,15 @@ const PATTERNS = {
 export const PATTERN_NAMES = Object.keys(PATTERNS);
 
 export function generateRow(rng, y, diff, opts = {}) {
+  const L = opts.layout || LANDSCAPE;
   const weights = opts.rush
     ? { loot: 6, recruit: 2.2, castles: 1.2, solids: 1.5, dog: 0.4 } // Hora do Arrastão: fartura
     : { ...diff.weights };
   if (opts.recruitBoost) weights.recruit *= opts.recruitBoost;
   const pattern = rng.weighted(weights);
-  const specs = PATTERNS[pattern](rng, y, diff);
+  const specs = PATTERNS[pattern](rng, y, diff, L);
   if (rng.chance(0.25)) {
-    specs.unshift({ kind: 'towel', x: rng.range(ZONE.sandStart, ZONE.sandEnd - 200), y: y + rng.range(-120, 120) });
+    specs.unshift({ kind: 'towel', x: rng.range(L.zone.sandStart, L.zone.sandEnd - 200), y: y + rng.range(-120, 120) });
   }
   return { pattern, specs };
 }

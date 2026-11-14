@@ -20,37 +20,45 @@
   <div id="root">
   <canvas id="game" aria-label="Wavesson"></canvas>
 
-  <!-- Telas no layout original de 2017 (janela de 1600x720, escalada pra caber) -->
+  <!-- Telas no layout original de 2017. Cada peça tem posição pro palco
+       horizontal (--x/--y/--w/--h, 1600x720) e pro vertical (--px/--py/--pw/--ph, 720x1280).
+       Imagens largas demais pro vertical aparecem recortadas em pedaços (.crop). -->
   <div id="stage">
     <section id="loading" class="screen show"><p class="hand">Carregando a praia… <span id="loadpct">0%</span></p></section>
 
     <section id="menu" class="screen beach">
-      <button class="spr" data-action="play" style="--x:559px;--y:244px;--w:343px;--h:81px">
+      <button class="spr" data-action="play" style="--x:559px;--y:244px;--w:343px;--h:81px;--px:360px;--py:470px;--pw:343px;--ph:81px">
         <img src="assets/ui/btn_start.png" alt="Start" />
       </button>
-      <button class="link" data-action="daily" style="--x:559px;--y:311px">desafio do dia</button>
-      <button class="spr" data-action="music" style="--x:555px;--y:377px;--w:441px;--h:85px">
+      <button class="link" data-action="daily" style="--x:559px;--y:311px;--px:360px;--py:535px">desafio do dia</button>
+      <button class="spr" data-action="music" style="--x:555px;--y:377px;--w:441px;--h:85px;--px:360px;--py:612px;--pw:397px;--ph:77px">
         <img src="assets/ui/btn_options.png" alt="Options" />
       </button>
-      <button class="spr" data-action="howto" style="--x:1229px;--y:247px;--w:738px;--h:82px">
+      <button class="spr" data-action="howto" style="--x:1229px;--y:247px;--w:738px;--h:82px;--px:360px;--py:722px;--pw:627px;--ph:70px">
         <img src="assets/ui/btn_instructions.png" alt="Instructions" />
       </button>
-      <button class="spr" data-action="credits" style="--x:1235px;--y:390px;--w:412px;--h:81px">
+      <button class="spr" data-action="credits" style="--x:1235px;--y:390px;--w:412px;--h:81px;--px:360px;--py:830px;--pw:371px;--ph:73px">
         <img src="assets/ui/btn_credits.png" alt="Credits" />
       </button>
-      <img class="sprite head" src="assets/img/head.png" alt="" style="--x:167px;--y:301px;--w:295px;--h:280px" />
+      <img class="sprite head" src="assets/img/head.png" alt="" style="--x:167px;--y:301px;--w:295px;--h:280px;--px:330px;--py:290px;--pw:220px;--ph:209px" />
       <div class="menu-sea"></div>
-      <img class="sprite logo" src="assets/img/logo.png" alt="Wavesson" style="--x:727px;--y:614px;--w:1441px;--h:182px" />
-      <img class="sprite andre" src="assets/ui/andre.png" alt="" style="--x:1515px;--y:606px;--w:68px;--h:172px" />
+      <img class="sprite logo" src="assets/img/logo.png" alt="Wavesson" style="--x:727px;--y:614px;--w:1441px;--h:182px;--px:360px;--py:calc(var(--sh) - 170px);--pw:700px;--ph:88px" />
+      <img class="sprite andre" src="assets/ui/andre.png" alt="" style="--x:1515px;--y:606px;--w:68px;--h:172px;--px:560px;--py:300px;--pw:64px;--ph:162px" />
       <p class="best hand" id="menuBest"></p>
     </section>
 
     <section id="howto" class="screen beach" data-page="1">
       <div class="page" data-page="1">
-        <img class="sprite" src="assets/ui/inst1.png" alt="Instruções: você controla um grupo que inicia um arrastão nas praias do RJ. Setas movem o bando, P pausa." style="--x:804px;--y:259px;--w:1578px;--h:238px" />
+        <img class="sprite lonly" src="assets/ui/inst1.png" alt="Instruções: você controla um grupo que inicia um arrastão nas praias do RJ. Setas movem o bando, P pausa." style="--x:804px;--y:259px;--w:1578px;--h:238px" />
+        <div class="crop ponly" role="img" aria-label="Você controla um grupo que inicia um arrastão nas praias do RJ. Roube e consiga mais pessoas para entrar nessa onda, mas cuidado com os obstáculos!" style="--img:url(assets/ui/inst1.png);--iw:1681px;--ih:291px;--sx:0px;--sy:0px;--k:1.0;--px:360px;--py:345px;--pw:705px;--ph:291px"></div>
+        <div class="crop ponly" role="img" aria-label="Setas: movimento do bando" style="--img:url(assets/ui/inst1.png);--iw:1681px;--ih:291px;--sx:840px;--sy:0px;--k:1.0;--px:200px;--py:690px;--pw:320px;--ph:291px"></div>
+        <div class="crop ponly" role="img" aria-label="P: pause" style="--img:url(assets/ui/inst1.png);--iw:1681px;--ih:291px;--sx:1415px;--sy:25px;--k:1.0;--px:530px;--py:650px;--pw:275px;--ph:105px"></div>
       </div>
       <div class="page" data-page="2">
-        <img class="sprite" src="assets/ui/inst2.png" alt="Inimigos: cachorro e salva-vidas tiram um personagem; castelo de areia reduz a velocidade; rede de vôlei e carro de picolé bloqueiam." style="--x:793px;--y:332px;--w:1547px;--h:309px" />
+        <img class="sprite lonly" src="assets/ui/inst2.png" alt="Inimigos: cachorro e salva-vidas tiram um personagem; castelo de areia reduz a velocidade; rede de vôlei e carro de picolé bloqueiam." style="--x:793px;--y:332px;--w:1547px;--h:309px" />
+        <div class="crop ponly" role="img" aria-label="Inimigos: cuidado com os obstáculos que você encontra pela praia!" style="--img:url(assets/ui/inst2.png);--iw:1686px;--ih:309px;--sx:0px;--sy:0px;--k:0.9;--px:360px;--py:345px;--pw:695px;--ph:278px"></div>
+        <div class="crop ponly" role="img" aria-label="Cachorro Nervoso, Surfista Desatento e Salva-Vidas: perde um personagem" style="--img:url(assets/ui/inst2.png);--iw:1686px;--ih:309px;--sx:840px;--sy:0px;--k:0.85;--px:182px;--py:715px;--pw:336px;--ph:263px"></div>
+        <div class="crop ponly" role="img" aria-label="Castelo de Areia reduz a velocidade; Rede de Vôlei e Carro de Picolé bloqueiam a passagem" style="--img:url(assets/ui/inst2.png);--iw:1686px;--ih:309px;--sx:1345px;--sy:0px;--k:0.85;--px:545px;--py:715px;--pw:290px;--ph:263px"></div>
       </div>
       <div class="page news hand" data-page="3">
         <h2>NOVIDADES</h2>
@@ -74,25 +82,29 @@
         </div>
       </div>
       <div class="menu-sea"></div>
-      <button class="spr p1" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
-      <button class="spr p2 p3" data-action="prev" style="--x:167px;--y:659px;--w:253px;--h:76px"><img src="assets/ui/btn_back.png" alt="Back" /></button>
-      <button class="spr p1 p2" data-action="next" style="--x:1431px;--y:649px;--w:288px;--h:82px"><img src="assets/ui/btn_next.png" alt="Next" /></button>
-      <button class="spr p3" data-action="back" style="--x:1431px;--y:649px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+      <button class="spr p1" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px;--px:160px;--py:calc(var(--sh) - 85px);--pw:245px;--ph:66px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+      <button class="spr p2 p3" data-action="prev" style="--x:167px;--y:659px;--w:253px;--h:76px;--px:150px;--py:calc(var(--sh) - 85px);--pw:228px;--ph:68px"><img src="assets/ui/btn_back.png" alt="Back" /></button>
+      <button class="spr p1 p2" data-action="next" style="--x:1431px;--y:649px;--w:288px;--h:82px;--px:570px;--py:calc(var(--sh) - 85px);--pw:259px;--ph:74px"><img src="assets/ui/btn_next.png" alt="Next" /></button>
+      <button class="spr p3" data-action="back" style="--x:1431px;--y:649px;--w:306px;--h:82px;--px:560px;--py:calc(var(--sh) - 85px);--pw:245px;--ph:66px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
     </section>
 
     <section id="credits" class="screen beach">
-      <img class="sprite" src="assets/ui/credits_title.png" alt="Credits" style="--x:196px;--y:226px;--w:379px;--h:75px" />
-      <img class="sprite" src="assets/ui/credits_names.png" alt="André Rodrigues, Henrique Hamilko, Eduardo Hamilko, Maria Augusta" style="--x:804px;--y:401px;--w:1584px;--h:242px" />
+      <img class="sprite" src="assets/ui/credits_title.png" alt="Credits" style="--x:196px;--y:226px;--w:379px;--h:75px;--px:220px;--py:235px;--pw:341px;--ph:68px" />
+      <img class="sprite lonly" src="assets/ui/credits_names.png" alt="André Rodrigues, Henrique Hamilko, Eduardo Hamilko, Maria Augusta" style="--x:804px;--y:401px;--w:1584px;--h:242px" />
+      <div class="crop ponly" role="img" aria-label="André Rodrigues" style="--img:url(assets/ui/credits_names.png);--iw:1639px;--ih:270px;--sx:0px;--sy:0px;--k:0.9;--px:360px;--py:360px;--pw:670px;--ph:119px"></div>
+      <div class="crop ponly" role="img" aria-label="Henrique Hamilko" style="--img:url(assets/ui/credits_names.png);--iw:1639px;--ih:270px;--sx:860px;--sy:0px;--k:0.88;--px:360px;--py:482px;--pw:686px;--ph:106px"></div>
+      <div class="crop ponly" role="img" aria-label="Eduardo Hamilko" style="--img:url(assets/ui/credits_names.png);--iw:1639px;--ih:270px;--sx:0px;--sy:128px;--k:0.9;--px:360px;--py:610px;--pw:670px;--ph:128px"></div>
+      <div class="crop ponly" role="img" aria-label="Maria Augusta" style="--img:url(assets/ui/credits_names.png);--iw:1639px;--ih:270px;--sx:925px;--sy:128px;--k:0.9;--px:360px;--py:745px;--pw:643px;--ph:128px"></div>
       <p class="hand remake">hackathon · janeiro de 2017<br />remake infinito · 2026</p>
       <div class="menu-sea"></div>
-      <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+      <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px;--px:160px;--py:calc(var(--sh) - 85px);--pw:245px;--ph:66px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
     </section>
 
     <section id="music" class="screen beach">
-      <img class="sprite" src="assets/ui/btn_options.png" alt="Options" style="--x:300px;--y:200px;--w:441px;--h:85px" />
+      <img class="sprite" src="assets/ui/btn_options.png" alt="Options" style="--x:300px;--y:200px;--w:441px;--h:85px;--px:360px;--py:240px;--pw:397px;--ph:77px" />
       <div class="tracks hand" id="trackList"></div>
       <div class="menu-sea"></div>
-      <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+      <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px;--px:160px;--py:calc(var(--sh) - 85px);--pw:245px;--ph:66px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
     </section>
   </div>
 
