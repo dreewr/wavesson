@@ -1,6 +1,0 @@
-{
-  "version": "0.0.1",
-  "configurations": [
-    { "name": "wavesson", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "5173", "--directory", "/Users/andre/wavesson"], "port": 5173 }
-  ]
-}

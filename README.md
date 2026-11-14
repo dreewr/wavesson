@@ -8,6 +8,10 @@ Feito numa hackathon em jan/2017 (Construct 2). Em 2026 virou um **roguelike inf
 
 ## Jogar
 
+**Online:** https://dreewr.github.io/wavesson/
+
+Local:
+
 ```bash
 npm start   # python3 -m http.server 5173
 ```
@@ -57,6 +61,6 @@ npm test
 
 Arte, sprites e trilha: equipe Wavesson02 (hackathon, 2017).
 
-As faixas do seletor de música (Sweet Dreams, Naruto, A Grande Família e a vinheta do gás) são de
-terceiros, guardadas aqui por memória afetiva num repo pessoal e privado. Se o repo ficar público,
-tirar `assets/audio/music/` e `assets/audio/o-gas.m4a` antes.
+As faixas do seletor de música (Sweet Dreams, Naruto, A Grande Família e a vinheta do gás) pertencem
+aos seus autores. Estão aqui só pela memória afetiva da hackathon, num projeto pessoal e sem fins
+comerciais; se algum detentor pedir, elas saem.
