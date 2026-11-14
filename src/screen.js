@@ -24,6 +24,7 @@ export function toLocal(clientX, clientY) {
 export function applyOrientation() {
   rotated = portraitTouch();
   const root = document.getElementById('root');
+  if (!root) return;
   const { w, h } = viewport();
   root.style.width = `${w}px`;
   root.style.height = `${h}px`;

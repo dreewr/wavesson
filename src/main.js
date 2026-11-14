@@ -194,7 +194,25 @@ function bindUi() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) togglePause(true); });
 }
 
+// O GitHub Pages deixa arquivos em cache por ~10 min. Logo depois de uma
+// atualização, quem já tinha aberto o jogo pode receber HTML velho com JS novo.
+// Nesse caso, renova o cache da página e recarrega (uma vez só).
+async function healStaleCache() {
+  if (document.getElementById('root')) {
+    try { sessionStorage.removeItem('wavesson.healed'); } catch {}
+    return false;
+  }
+  try {
+    if (sessionStorage.getItem('wavesson.healed')) return false;
+    sessionStorage.setItem('wavesson.healed', '1');
+  } catch { return false; }
+  await Promise.all([location.href, 'style.css'].map((u) => fetch(u, { cache: 'reload' }).catch(() => {})));
+  location.reload();
+  return true;
+}
+
 async function boot() {
+  if (await healStaleCache()) return;
   fitStage();
   addEventListener('resize', fitStage);
   screen.orientation?.addEventListener?.('change', () => setTimeout(fitStage, 50));
