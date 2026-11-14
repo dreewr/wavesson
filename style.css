@@ -79,9 +79,10 @@ canvas { display: block; position: absolute; inset: 0; }
 
 .link {
   position: absolute;
-  left: calc(var(--x) - 150px);
+  left: calc(var(--x) - 220px);
   top: calc(var(--y) - 24px);
-  width: 300px;
+  width: 440px;
+  white-space: nowrap;
   z-index: 2;
   border: 0;
   background: none;
@@ -271,7 +272,7 @@ html.portrait .spr {
   width: var(--pw);
   height: var(--ph);
 }
-html.portrait .link { left: calc(var(--px) - 150px); top: calc(var(--py) - 24px); }
+html.portrait .link { left: calc(var(--px) - 220px); top: calc(var(--py) - 24px); }
 html.portrait .menu-sea { top: calc(var(--sh) - 304px); left: -500px; }
 html.portrait #loading p { top: 600px; }
 html.portrait .best { left: 60px; width: 600px; top: 875px; }
