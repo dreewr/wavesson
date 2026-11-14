@@ -59,6 +59,12 @@ legacy/          o projeto Construct 2 original, pra referência
 npm test
 ```
 
+## Publicação
+
+Todo push na `main` dispara `.github/workflows/pages.yml`: roda os testes, monta o site com
+`tools/stamp.mjs` (carimba a versão do commit em todos os imports) e publica no GitHub Pages.
+O jogo confere `version.json` ao abrir e se atualiza sozinho se o navegador tiver uma versão velha em cache.
+
 ## Créditos
 
 Arte, sprites e trilha: equipe Wavesson02 (hackathon, 2017).

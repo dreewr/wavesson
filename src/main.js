@@ -226,8 +226,31 @@ async function healStaleCache() {
   return true;
 }
 
+// Versão publicada: o deploy carimba main.js?v=<commit>. Se o servidor já tem
+// uma versão mais nova que a que está rodando (cache do navegador), renova a
+// página e recarrega uma vez — aí todos os arquivos vêm com a versão nova.
+const MY_VERSION = new URL(import.meta.url).searchParams.get('v');
+
+async function ensureLatest() {
+  if (!MY_VERSION) return false; // rodando local, sem carimbo
+  try {
+    const res = await fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' });
+    const { v } = await res.json();
+    if (!v || v === MY_VERSION) return false;
+    const key = `wavesson.updated.${v}`;
+    if (sessionStorage.getItem(key)) return false; // já tentou: não entra em loop
+    sessionStorage.setItem(key, '1');
+    await fetch(location.href, { cache: 'reload' });
+    location.reload();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function boot() {
   if (await healStaleCache()) return;
+  if (await ensureLatest()) return;
   fitStage();
   addEventListener('resize', fitStage);
   screen.orientation?.addEventListener?.('change', () => setTimeout(fitStage, 50));
