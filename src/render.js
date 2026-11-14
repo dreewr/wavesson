@@ -58,17 +58,50 @@ export function createRenderer(canvas, images) {
 
   // ------------------------------------------------------------ cenário
 
+  // textura de areia: pontinhos claros e escuros num ladrilho que rola com a praia
+  const sandTile = (() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 160;
+    const g = c.getContext('2d');
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 520; i++) {
+      g.fillStyle = rnd() < 0.55 ? 'rgba(120,85,20,0.16)' : 'rgba(255,255,255,0.28)';
+      const s = rnd() < 0.85 ? 2 : 3;
+      g.fillRect(Math.floor(rnd() * 160), Math.floor(rnd() * 160), s, s);
+    }
+    return c;
+  })();
+  let sandPattern = null;
+
   function drawBeach(run) {
     const cam = run.cameraY;
     ctx.fillStyle = run.biome.sand;
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    sandPattern ??= ctx.createPattern(sandTile, 'repeat');
+    ctx.save();
+    ctx.translate(0, -(cam % 160));
+    ctx.fillStyle = sandPattern;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H + 160);
+    ctx.restore();
+
+    // areia molhada escurecendo até a beira d'água
+    const wet0 = ZONE.shallow - 120 + run.tide.offset;
+    const wet = ctx.createLinearGradient(wet0, 0, ZONE.shallow + run.tide.offset + 10, 0);
+    wet.addColorStop(0, 'rgba(150,110,40,0)');
+    wet.addColorStop(1, 'rgba(150,110,40,0.28)');
+    ctx.fillStyle = wet;
+    ctx.fillRect(wet0, 0, 140, VIEW_H);
 
     // calçadão (tile vertical)
     const walk = images[run.biome.walk];
     const tileH = (walk.height * ZONE.walkEnd) / walk.width;
     for (let y = -(cam % tileH); y < VIEW_H; y += tileH) ctx.drawImage(walk, 0, y, ZONE.walkEnd, tileH);
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    ctx.fillRect(ZONE.walkEnd, 0, 8, VIEW_H);
+    // meio-fio do calçadão + sombra na areia
+    ctx.fillStyle = '#d8d2c2';
+    ctx.fillRect(ZONE.walkEnd - 2, 0, 7, VIEW_H);
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.fillRect(ZONE.walkEnd + 5, 0, 7, VIEW_H);
 
     // mar animado; a onda empurra tudo pra esquerda
     const off = run.tide.offset;
@@ -89,8 +122,21 @@ export function createRenderer(canvas, images) {
 
   // ------------------------------------------------------------ entidades
 
+  // sombra no chão: neutra pra obstáculos, avermelhada pra quem derruba
+  const OWN_SHADOW = new Set(['surfer', 'bombeiro', 'police', 'banhista', 'towel', 'flipflop', 'phone', 'bag']);
+  function groundShadow(e, sy) {
+    if (OWN_SHADOW.has(e.kind)) return;
+    const h = e.def.hit || { ox: 0, oy: e.h - 20, w: e.w, h: 20 };
+    const deadly = e.def.role === 'deadly';
+    ctx.fillStyle = deadly ? 'rgba(210,25,25,0.32)' : 'rgba(60,40,0,0.22)';
+    ctx.beginPath();
+    ctx.ellipse(e.x + h.ox + h.w / 2, sy + h.oy + h.h - 3, h.w * 0.6, Math.max(6, h.h * 0.28), 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   function drawEntity(run, e) {
     const sy = e.y - run.cameraY;
+    groundShadow(e, sy);
     switch (e.kind) {
       case 'dog': {
         const img = anim('dog', e.t, 8);
@@ -109,8 +155,20 @@ export function createRenderer(canvas, images) {
       case 'recruit': {
         const skin = CREW_SKINS[e.skin % CREW_SKINS.length];
         ctx.drawImage(images[`${skin}_0`], e.x, sy, CREW.w, CREW.h);
-        const bob = Math.sin(e.t * 6) * 5;
-        label('!', e.x + CREW.w / 2, sy - 14 + bob, '#ffe14d', 34);
+        // balão branco com "!" azul: dá pra ver em qualquer areia
+        const bob = Math.sin(e.t * 6) * 4;
+        const bx = e.x + CREW.w / 2, by = sy - 22 + bob;
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(bx, by, 15, 0, Math.PI * 2);
+        ctx.moveTo(bx - 5, by + 13);
+        ctx.lineTo(bx, by + 22);
+        ctx.lineTo(bx + 5, by + 13);
+        ctx.fill();
+        ctx.stroke();
+        label('!', bx, by + 9, '#3a3d9b', 26, '#fff');
         return;
       }
       case 'police':
@@ -122,9 +180,19 @@ export function createRenderer(canvas, images) {
       case 'bombeiro':
         drawBombeiro(e, sy);
         return;
+      case 'banhista':
+        drawBanhista(run, e, sy);
+        return;
       case 'flipflop': case 'phone': case 'bag': {
         const pulse = 1 + Math.sin(e.t * 8) * 0.06;
         const w = e.w * pulse, h = e.h * pulse;
+        // brilho atrás do item
+        const cx = e.x + e.w / 2, cy = sy + e.h / 2, r = Math.max(e.w, e.h) * 0.75;
+        const glow = ctx.createRadialGradient(cx, cy, 2, cx, cy, r);
+        glow.addColorStop(0, 'rgba(255,255,255,0.75)');
+        glow.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
         ctx.drawImage(anim(e.kind, e.t, 4), e.x + (e.w - w) / 2, sy + (e.h - h) / 2, w, h);
         return;
       }
@@ -216,6 +284,84 @@ export function createRenderer(canvas, images) {
     R('#d32f2f', 19, 43, 6, 2);
   }
 
+  const BIKINI = ['#e91e63', '#00bcd4', '#ff9800', '#8e24aa', '#43a047', '#f44336'];
+  const HAIR = ['#3e2723', '#212121', '#f9a825', '#6d4c41', '#bf360c', '#111'];
+  const TOWEL = [['#ff6f91', '#fff'], ['#29b6f6', '#fff'], ['#ffd54f', '#ef6c00'], ['#66bb6a', '#fff']];
+
+  function heart(x, y, r, color = '#e91e63') {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x, y + r * 0.9);
+    ctx.bezierCurveTo(x - r * 1.6, y - r * 0.2, x - r * 0.6, y - r * 1.4, x, y - r * 0.5);
+    ctx.bezierCurveTo(x + r * 0.6, y - r * 1.4, x + r * 1.6, y - r * 0.2, x, y + r * 0.9);
+    ctx.fill();
+  }
+
+  // Banhista deitada de bruços na toalha, de óculos escuros, mexendo o pé.
+  function drawBanhista(run, e, sy) {
+    const k = e.look ?? 0;
+    const x = Math.round(e.x), y = Math.round(sy);
+    const skin = SKIN[(k + 1) % SKIN.length];
+    const [t1, t2] = TOWEL[k % TOWEL.length];
+    const R = (c, rx, ry, rw, rh) => { ctx.fillStyle = c; ctx.fillRect(x + rx, y + ry, rw, rh); };
+
+    // raio de "perigo": só aparece quando o bando chega perto
+    const c = run.crewCenter();
+    if (c) {
+      const d = Math.hypot(c.x - (e.x + e.w / 2), c.y - (e.y + e.h / 2));
+      if (d < e.def.aura * 2.6) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(0.5, (e.def.aura * 2.6 - d) / 200);
+        ctx.strokeStyle = '#ff4f8b';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 10]);
+        ctx.lineDashOffset = -run.time * 30;
+        ctx.beginPath();
+        ctx.ellipse(e.x + e.w / 2, sy + e.h / 2, e.def.aura, e.def.aura * 0.8, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // toalha listrada com sombra
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(x + 4, y + 22, e.w, 44);
+    for (let i = 0; i < 10; i++) R(i % 2 ? t2 : t1, i * 15, 18, 15, 44);
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y + 18, e.w, 44);
+
+    // pernas (um pé balança)
+    const kick = Math.sin(e.t * 4) > 0 ? -8 : 0;
+    R(skin, 92, 33, 44, 9);
+    R(skin, 92, 44, 36, 9);
+    R(skin, 128, 44 + kick, 8, 10);
+    // biquíni + tronco
+    R(skin, 40, 30, 54, 24);
+    R(BIKINI[k % BIKINI.length], 80, 30, 14, 24);
+    R(BIKINI[k % BIKINI.length], 52, 30, 4, 24);
+    // braço dobrado debaixo da cabeça
+    R(skin, 22, 50, 28, 8);
+    // cabeça, cabelo e óculos
+    R(HAIR[k % HAIR.length], 10, 26, 30, 30);
+    R(skin, 18, 30, 20, 22);
+    R('#111', 18, 34, 20, 5);
+    R('#e53935', 32, 46, 4, 2);
+    // chapéu de praia de vez em quando
+    if (k % 3 === 0) {
+      ctx.fillStyle = '#f4e1a1';
+      ctx.beginPath();
+      ctx.ellipse(x + 18, y + 26, 22, 9, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      R('#e91e63', 8, 22, 22, 4);
+    }
+    // corações quando alguém do bando já se apaixonou
+    if (e.charmed) {
+      const b = Math.sin(e.t * 5) * 3;
+      heart(x + 70, y + 8 + b, 7);
+    }
+  }
+
   function drawPolice(run, e, sy) {
     if (e.state === 'warn' || e.state === 'waiting') {
       const blink = Math.floor(e.t * 8) % 2 === 0;
@@ -280,6 +426,13 @@ export function createRenderer(canvas, images) {
     }
     ctx.drawImage(img, m.x, sy, CREW.w, CREW.h);
     if (m.slowT > 0) label('~', m.x + CREW.w / 2, sy - 4, '#8d6e3f', 28);
+    if (m.loveT > 0) {
+      // apaixonado: corações subindo e balançando em volta da cabeça
+      for (let i = 0; i < 3; i++) {
+        const ph = (m.animT * 1.4 + i / 3) % 1;
+        heart(m.x + CREW.w / 2 + Math.sin((ph + i) * 6) * 12, sy - 6 - ph * 34, 6 + i, `rgba(233,30,99,${1 - ph})`);
+      }
+    }
 
   }
 
@@ -300,7 +453,7 @@ export function createRenderer(canvas, images) {
   // topo central, rótulo à esquerda e valor à direita) num "bilhete" de papel
   // com a letra manuscrita dos menus. Em volta: combo, vantagens, pique, escudos.
   const HAND = 'Kalam, "Comic Sans MS", "Chalkboard SE", cursive';
-  const INK = '#333';
+  const INK = '#222';
   const BLUE = '#3a3d9b';
   const PAPER = '#fffdf2';
 

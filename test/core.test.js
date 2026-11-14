@@ -302,3 +302,35 @@ test('layout vertical: run roda, mantém o bando na tela e acaba se ficar parado
   }
   assert.ok(run.over);
 });
+
+test('banhista: quem passa perto se apaixona, o pique desperta e ficar pra trás apaixonado tem causa própria', async () => {
+  const { LOVE } = await import('../src/run.js');
+  const events = [];
+  const run = new Run({ seed: 'praia', onEvent: (n) => events.push(n) });
+  run.entities = [];
+  run.nextRowY = Infinity;
+  run.nextPerkAt = Infinity;
+  const m = run.crew[0];
+  run.crew = [m, run.crew[1]];
+  run.spawn({ kind: 'banhista', x: m.x - 40, y: m.y + 60, look: 0 }, difficultyAt(0));
+  run.update(1 / 60, { x: 0, y: 0 });
+  assert.ok(m.loveT > 0, 'deveria se apaixonar');
+  assert.ok(events.includes('love'));
+  // apaixonado obedece pouco: empurrar pra direita quase não mexe
+  const x0 = m.x;
+  for (let i = 0; i < 20; i++) run.update(1 / 60, { x: 1, y: 0 });
+  const other = run.crew[1];
+  assert.ok(m.x - x0 < (20 / 60) * 380 * LOVE.control + 30, 'controle reduzido');
+  // pique desperta
+  run.dash.cd = 0;
+  run.update(1 / 60, { x: 0, y: 0, dash: true });
+  assert.equal(m.loveT, 0);
+  assert.ok(events.includes('awake'));
+  // apaixonado que sai por cima da tela conta como 'love'
+  m.loveT = 1;
+  m.y = run.cameraY - 200;
+  run.dash.t = 0;
+  run.update(1 / 60, { x: 0, y: 0 });
+  assert.equal(run.deaths.love, 1);
+  assert.ok(other);
+});

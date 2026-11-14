@@ -40,6 +40,7 @@ export function difficultyAt(meters) {
       dog: lerp(1.2, 3, ramp),
       vendor: tier >= 1 ? lerp(0.6, 1.4, ramp) : 0,
       lifeguard: tier >= 1 ? lerp(0.6, 1.8, ramp) : 0,
+      banhista: lerp(0.7, 1.4, ramp),
       surfer: tier >= 1 ? lerp(0.6, 1.6, ramp) : 0,
       squad: tier >= 1 ? lerp(0.6, 1.5, ramp) + late * 0.3 : 0,
       police: tier >= 2 ? lerp(0.5, 1.6, ramp) + late * 0.3 : 0,

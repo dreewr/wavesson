@@ -18,6 +18,8 @@ function solidKindAt(rng, x, L) {
 
 // amplitude máxima do cachorro pra ele caber na faixa jogável
 const maxDogAmp = (L) => (L.laneMax - L.laneMin) / 2 - 60;
+// praia estreita → vaivém do cachorro proporcionalmente menor
+const dogAmpScale = (L) => Math.min(1, Math.max(0.5, (L.laneMax - L.laneMin) / 1300));
 
 // Escolhe a passagem e preenche o resto com até `count` sólidos sem invadi-la.
 export function placeSolids(rng, count, gapWidth, L = LANDSCAPE) {
@@ -70,7 +72,7 @@ const PATTERNS = {
   dog(rng, y, diff, L) {
     const out = [];
     for (let i = 0; i < 1; i++) {
-      const amp = Math.min(diff.dogAmp * rng.range(0.7, 1.1), maxDogAmp(L));
+      const amp = Math.min(diff.dogAmp * dogAmpScale(L) * rng.range(0.7, 1.1), maxDogAmp(L));
       const cx = rng.range(L.laneMin + amp + 45, L.laneMax - amp - 45);
       out.push({ kind: 'dog', x: cx, y: y + i * 90, amp, speed: diff.dogSpeed * rng.range(0.85, 1.15), phase: rng.range(0, Math.PI * 2) });
     }
@@ -145,6 +147,18 @@ const PATTERNS = {
     return [{ kind: 'squad', x: 0, y, form, members, speed: diff.squadSpeed, warn: diff.squadWarn }];
   },
 
+  // Banhista: deitada na areia, com uma bolsa do lado de isca.
+  banhista(rng, y, diff, L) {
+    const n = diff.tier >= 4 && L.kind === 'landscape' && rng.chance(0.35) ? 2 : 1;
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const x = rng.range(L.zone.sandStart, L.zone.sandEnd - 160);
+      out.push({ kind: 'banhista', x, y: y + i * 150, look: rng.int(0, 5) });
+      if (rng.chance(0.6)) out.push({ kind: rng.chance(0.4) ? 'bag' : 'phone', x: x + rng.pick([-40, 175]), y: y + 10 + i * 150 });
+    }
+    return out;
+  },
+
   police(rng, y, diff, L) {
     return [{ kind: 'police', x: 0, y, dir: rng.chance(0.6) ? 1 : -1 }];
   },
@@ -153,7 +167,7 @@ const PATTERNS = {
     // sólidos + cachorro patrulhando a passagem
     const { gap, solids } = placeSolids(rng, rng.int(3, 5), diff.gapWidth + 40, L);
     const out = solids.map((s) => ({ ...s, y: y - DEFS[s.kind].hit.oy }));
-    const amp = Math.min(diff.dogAmp, 220, maxDogAmp(L));
+    const amp = Math.min(diff.dogAmp * dogAmpScale(L), 220, maxDogAmp(L));
     const mid = (gap.from + gap.to) / 2;
     // o cachorro patrulha a passagem, mas sem sair da faixa jogável
     const cx = Math.min(Math.max(mid, L.laneMin + amp + 45), L.laneMax - amp - 45);

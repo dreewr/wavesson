@@ -103,6 +103,8 @@ export function createAudio() {
     // apito de guarda-vidas: trinado agudo
     whistle: () => { for (let i = 0; i < 6; i++) tone(i % 2 ? 2900 : 2500, 0.07, { delay: i * 0.075, type: 'square', vol: 0.05 }); tone(2700, 0.35, { delay: 0.5, type: 'square', vol: 0.05 }); },
     stomp: () => { for (let i = 0; i < 4; i++) setTimeout(() => noise(0.08, 0.12), i * 110); },
+    // suspiro apaixonado: sobe e desce
+    love: () => { tone(523, 0.22, { type: 'sine', slide: 260, vol: 0.09 }); tone(784, 0.3, { delay: 0.2, type: 'sine', slide: -240, vol: 0.08 }); },
     dodge: () => { tone(784, 0.08, { type: 'triangle' }); tone(1175, 0.14, { delay: 0.08, type: 'triangle' }); },
     siren: () => { if (!muted) { siren.currentTime = 0; siren.play().catch(() => {}); } },
     gas: () => { if (!muted) { gas.currentTime = 0; gas.play().catch(() => {}); } },

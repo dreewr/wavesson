@@ -19,7 +19,7 @@ npm start   # python3 -m http.server 5173
 Abra http://localhost:5173. Sem build, sem dependências. `?seed=QUALQUERCOISA` fixa a praia.
 
 **Controles:** WASD/setas ou arrastar na tela · `Espaço`/`Shift` pique · `P`/`Esc` pausa · `M` som · `1 2 3` escolhem vantagem.
-No celular aparecem os botões PIQUE e pausa.
+No celular aparecem os botões PIQUE e pausa. Com o celular em pé o jogo usa um layout vertical próprio (praia mais estreita e alta, calibrada pra ter a mesma dificuldade).
 
 ## O que mudou em relação ao original
 
@@ -28,7 +28,7 @@ No celular aparecem os botões PIQUE e pausa.
 | Mapa fixo de 52.000 px montado à mão | Praia infinita gerada por seed, fileira a fileira |
 | Cada regra copiada 6× (uma por integrante, `favelado_1..6`) | Uma lista `crew[]`; o bonde pode ter qualquer tamanho |
 | Dificuldade constante | Velocidade, densidade e perigos crescem com a distância (`src/difficulty.js`) |
-| Só cachorro e salva-vidas matavam (o Surfista Desatento estava nas instruções mas nunca foi feito) | + Surfista Desatento de verdade, pelotão de bombeiros subindo a praia (com aviso na borda de baixo), viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
+| Só cachorro e salva-vidas matavam (o Surfista Desatento estava nas instruções mas nunca foi feito) | + Surfista Desatento de verdade, banhista que deixa o bando apaixonado (o pique acorda), pelotão de bombeiros subindo a praia (com aviso na borda de baixo), viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
 | Pontos só por item | Multiplicador pelo tamanho do bando, **combo** de itens seguidos e vantagens roguelike a cada trecho |
 | Só dava pra andar | **Pique**: arrancada curta com recarga e um respiro de invulnerabilidade |
 | — | **Hora do Arrastão** a cada praia nova: fartura e pontos em dobro |
@@ -41,7 +41,9 @@ No celular aparecem os botões PIQUE e pausa.
 
 ```
 src/
-  config.js      constantes do mundo (zonas da praia, tamanho do bonde)
+  config.js      constantes do mundo (zonas da praia, tamanho do bando)
+  layout.js      enquadramentos: horizontal (1600x720, o de 2017) e vertical (720 x altura da tela)
+  screen.js      escolhe o layout pela orientação da tela
   defs.js        catálogo de entidades: sprite, hitbox e papel (solid/deadly/slow/loot/recruit)
   difficulty.js  curva de dificuldade (pura)
   generator.js   geração procedural com passagem garantida (pura)

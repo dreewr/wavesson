@@ -19,13 +19,14 @@ const store = {
   set(v) { try { localStorage.setItem(BEST_KEY, JSON.stringify(v)); } catch {} },
 };
 
-const CAUSES = { left: 'Ficou pra trás', dog: 'Cachorro', lifeguard: 'Salva-vidas', surfer: 'Surfista desatento', bombeiro: 'Bombeiros', police: 'Viatura', sea: 'Correnteza' };
+const CAUSES = { left: 'Ficou pra trás', dog: 'Cachorro', lifeguard: 'Salva-vidas', surfer: 'Surfista desatento', bombeiro: 'Bombeiros', love: 'Ficou apaixonado', police: 'Viatura', sea: 'Correnteza' };
 
 let screen = 'loading';
 let run = null;
 let renderer, input, audio;
 let paused = false;
 let bestScore = 0;
+let lastLove = 0;
 
 // Telas do menu (.screen) vivem no palco de 1600x720; janelas do jogo (.overlay) ficam por cima do canvas.
 function show(id) {
@@ -79,6 +80,14 @@ function onEvent(name, data) {
     case 'siren': s.siren(); break;
     case 'surfer': s.surfer(); break;
     case 'squadWarn': s.whistle(); break;
+    case 'love': {
+      // vários se apaixonando juntos: um suspiro e um texto só
+      const now = performance.now();
+      if (now - lastLove > 500) { s.love(); renderer.float('apaixonou!', data.x + 17, data.y - 10, '#ff4f8b', 28); }
+      lastLove = now;
+      break;
+    }
+    case 'awake': renderer.float('acorda!', data.x + 17, data.y - 10, '#fff', 24); break;
     case 'squadRun': s.stomp(); renderer.shake(5); break;
     case 'dodge': s.dodge(); renderer.float(`passou liso! +${data.pts}`, run.layout.w / 2, run.cameraY + 320, '#9cff8a', 34); break;
     case 'tideWarn': s.tideWarn(); break;

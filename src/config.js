@@ -41,9 +41,10 @@ export const PERK_STEP = 140; // intervalo cresce a cada escolha
 export const PERK_STEP_GROWTH = 30;
 
 export const BIOMES = [
-  { name: 'Copacabana', walk: 'walk_copacabana', sand: '#e2d248' },
-  { name: 'Ipanema', walk: 'walk_ipanema', sand: '#e6d65a' },
-  { name: 'Leblon', walk: 'walk_ipanema', sand: '#ecd875' },
-  { name: 'Barra', walk: 'walk_copacabana', sand: '#f0dc8a' },
+  // areia mais quente e menos "limão" que a de 2017; cada praia um tom
+  { name: 'Copacabana', walk: 'walk_copacabana', sand: '#e9cf6b' },
+  { name: 'Ipanema', walk: 'walk_ipanema', sand: '#edd57e' },
+  { name: 'Leblon', walk: 'walk_ipanema', sand: '#f0d98f' },
+  { name: 'Barra', walk: 'walk_copacabana', sand: '#f3dea0' },
 ];
 export const BIOME_LENGTH = 400; // metros

@@ -29,6 +29,9 @@ export const DEFS = {
   flipflop: { w: 40, h: 50, role: 'loot', hit: { ox: 0, oy: 0, w: 40, h: 50 }, sprites: ['flipflop_0', 'flipflop_1'], points: 10 },
   phone: { w: 25, h: 45, role: 'loot', hit: { ox: -6, oy: -4, w: 37, h: 53 }, sprites: ['phone_0', 'phone_1'], points: 100 },
   bag: { w: 60, h: 60, role: 'loot', hit: { ox: 0, oy: 0, w: 60, h: 60 }, sprites: ['bag_0', 'bag_1'], points: 200 },
+  // Banhista deitada na toalha: não machuca, mas quem passa perto fica apaixonado
+  // (perde o controle por um tempo e é puxado pra ela). O pique desperta.
+  banhista: { w: 150, h: 64, role: 'charm', hit: null, aura: 105, sprites: [] },
   towel: { w: 200, h: 100, role: 'decor', hit: null, sprites: ['towel1', 'towel2', 'towel3'] },
 };
 

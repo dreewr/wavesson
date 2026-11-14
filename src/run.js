@@ -22,6 +22,8 @@ export const COMBO = { window: 2.2, step: 0.1, max: 3 };
 export const RUSH = { seconds: 9, lootMult: 2 };
 // Margem (px) do topo da tela em que o integrante já está em perigo.
 export const DANGER_MARGIN = 70;
+// Banhista: quanto tempo o integrante fica apaixonado e quanto controle sobra.
+export const LOVE = { seconds: 2.6, control: 0.25, pull: 150, scroll: 0.82, cooldown: 3 };
 
 export class Run {
   constructor({ seed, onEvent = () => {}, layout = LANDSCAPE }) {
@@ -141,6 +143,8 @@ export class Run {
       this.dash.t = DASH.duration;
       this.dash.cd = this.dashCooldown;
       this.emit('dash');
+      // o pique desperta quem estava apaixonado
+      for (const m of this.crew) if (m.loveT > 0) { m.loveT = 0; m.loveCd = LOVE.cooldown; this.emit('awake', m); }
     }
     this.combo.t = Math.max(0, this.combo.t - dt);
     if (this.combo.t === 0) this.combo.n = 0;
@@ -374,11 +378,24 @@ export class Run {
       m.animT += dt;
       m.slowT = Math.max(0, m.slowT - dt);
       m.invulnT = Math.max(0, m.invulnT - dt);
+      m.loveCd = Math.max(0, (m.loveCd || 0) - dt);
+      if (m.loveT > 0) {
+        m.loveT = Math.max(0, m.loveT - dt);
+        if (m.loveT === 0) m.loveCd = LOVE.cooldown;
+      }
+      const inLove = m.loveT > 0 && !dashing;
       const inShallow = m.x + CREW.w / 2 > water.shallow;
       const slowed = !this.mods.slowImmune && (m.slowT > 0 || inShallow);
-      const f = slowed ? 0.5 : 1;
+      const f = (slowed ? 0.5 : 1) * (inLove ? LOVE.control : 1);
       m.x += dx * speed * f * dt;
-      m.y += (this.scroll * (slowed ? 0.8 : 1) + dy * speed * f) * dt;
+      m.y += (this.scroll * (slowed ? 0.8 : 1) * (inLove ? LOVE.scroll : 1) + dy * speed * f) * dt;
+      if (inLove && !m.loveTo.dead) {
+        // puxado na direção dela
+        const tx = m.loveTo.x + m.loveTo.w / 2 - (m.x + CREW.w / 2);
+        const ty = m.loveTo.y + m.loveTo.h / 2 - (m.y + CREW.h / 2);
+        const d = Math.hypot(tx, ty) || 1;
+        if (d > 40) { m.x += (tx / d) * LOVE.pull * dt; m.y += (ty / d) * LOVE.pull * dt; }
+      }
       m.x = clamp(m.x, 0, this.layout.w - CREW.w);
       m.y = Math.min(m.y, this.cameraY + this.layout.h - CREW.h - 4);
       m.moving = len > 0.1 || dashing;
@@ -386,6 +403,7 @@ export class Run {
     }
 
     this.separate();
+    this.charm();
 
     const solids = this.entities.filter((e) => e.def.role === 'solid' && !e.dead);
     for (let pass = 0; pass < 2; pass++) {
@@ -398,13 +416,32 @@ export class Run {
     }
 
     for (const m of [...this.crew]) {
-      if (m.y + CREW.h / 2 < this.cameraY - CREW.behindMargin) { this.kill(m, 'left'); continue; }
+      if (m.y + CREW.h / 2 < this.cameraY - CREW.behindMargin) { this.kill(m, m.loveT > 0 ? 'love' : 'left'); continue; }
       if (m.x + CREW.w / 2 > water.deep) {
         if (this.mods.surfer) m.x = water.shallow - CREW.w - 30;
         else if (!this.kill(m, 'sea')) m.x = water.shallow - CREW.w - 30;
         continue;
       }
       this.touch(m);
+    }
+  }
+
+  // Quem passa no raio da banhista fica apaixonado (se não estiver de pique).
+  charm() {
+    if (this.dash.t > 0) return;
+    for (const e of this.entities) {
+      if (e.kind !== 'banhista' || e.dead) continue;
+      const cx = e.x + e.w / 2, cy = e.y + e.h / 2;
+      for (const m of this.crew) {
+        if (m.loveT > 0 || m.loveCd > 0) continue;
+        const d = Math.hypot(m.x + CREW.w / 2 - cx, m.y + CREW.h * 0.6 - cy);
+        if (d < e.def.aura) {
+          m.loveT = LOVE.seconds;
+          m.loveTo = e;
+          e.charmed = (e.charmed || 0) + 1;
+          this.emit('love', { x: m.x, y: m.y });
+        }
+      }
     }
   }
 
@@ -463,8 +500,9 @@ export class Run {
 
   // Retorna true se o integrante saiu do bonde.
   kill(m, cause) {
-    if ((m.invulnT > 0 || this.dash.t > 0) && cause !== 'left') return false;
-    if (this.mods.shields > 0 && cause !== 'left') {
+    const behind = cause === 'left' || cause === 'love'; // ficar pra trás não tem escudo
+    if ((m.invulnT > 0 || this.dash.t > 0) && !behind) return false;
+    if (this.mods.shields > 0 && !behind) {
       this.mods.shields--;
       m.invulnT = CREW.invulnAfterShield;
       this.emit('shield', { x: m.x, y: m.y });
