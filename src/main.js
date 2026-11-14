@@ -3,6 +3,7 @@
 import { Run } from './run.js';
 import { loadImages } from './assets.js';
 import { createRenderer } from './render.js';
+import { pixelateImage } from './pixel.js';
 import { createInput } from './input.js';
 import { createAudio, TRACKS } from './audio.js';
 import { randomSeed } from './rng.js';
@@ -109,6 +110,7 @@ function startRun(seed = randomSeed()) {
   // ajuda pra iniciante: se as últimas partidas foram curtas, começa mais leve
   const assist = needsAssist(allRuns());
   run = new Run({ seed, onEvent, layout, assist });
+  renderer.warm(layout);
   recorder = createRecorder({ seed, layout, version: MY_VERSION, assist });
   paused = false;
   audio.startGame();
@@ -233,6 +235,42 @@ async function renderStats(tab = 'local') {
     <div class="hist-legend"><span>0 m</span><span>onde se perde gente</span><span>${Math.min(lastBucket, 1500)} m</span></div>`;
 }
 
+// Menu com a mesma arte em pixel do jogo: fundo, mar, cabeça e o boneco.
+// (Botões manuscritos e logo ficam nítidos: são interface.)
+function pixelateMenu() {
+  const load = (src) => new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src; });
+  const root = document.documentElement.style;
+  const run = async () => {
+    const bg = await load('assets/ui/menu_bg.png');
+    root.setProperty('--menu-bg', `url(${pixelateImage(bg).toDataURL()})`);
+    for (let i = 0; i < 6; i++) {
+      const sea = await load(`assets/img/menusea_${i}.png`);
+      root.setProperty(`--menusea-${i}`, `url(${pixelateImage(sea).toDataURL()})`);
+    }
+    for (const el of document.querySelectorAll('img.head, img.andre')) {
+      const img = await load(el.getAttribute('src'));
+      const target = Math.round(parseFloat(getComputedStyle(el).width) || 120);
+      el.src = pixelateImage(img, { scale: target / PIXEL_MENU / img.naturalWidth, withOutline: true }).toDataURL();
+      el.classList.add('pixel');
+    }
+  };
+  // fora do caminho crítico: se algo falhar, fica a arte original
+  (window.requestIdleCallback || setTimeout)(() => run().catch(() => {}));
+}
+const PIXEL_MENU = 2;
+
+// deixa todos os controles de som (ícone do menu, pausa, OPTIONS) com o mesmo estado
+function syncMute() {
+  const off = audio.muted;
+  const btn = $('muteBtn');
+  btn.textContent = off ? '🔇' : '🔊';
+  btn.classList.toggle('off', off);
+  btn.setAttribute('aria-label', off ? 'Som desligado' : 'Som ligado');
+  for (const el of document.querySelectorAll('.mute-label')) {
+    el.textContent = `som: ${off ? 'desligado' : 'ligado'}${el.closest('#pause') ? ' (M)' : ''}`;
+  }
+}
+
 function renderTracks() {
   const list = $('trackList');
   list.innerHTML = '';
@@ -265,6 +303,7 @@ function bindUi() {
       case 'credits': return show('credits');
       case 'music': renderTracks(); return show('music');
       case 'stats': renderStats(); return show('stats');
+      case 'mute': audio.toggleMute(); return syncMute();
       case 'export': return exportJson();
       case 'back': return show('menu');
       case 'resume': return togglePause(false);
@@ -274,7 +313,7 @@ function bindUi() {
   });
 
   addEventListener('keydown', (e) => {
-    if (e.code === 'KeyM') audio.toggleMute();
+    if (e.code === 'KeyM') { audio.toggleMute(); syncMute(); }
     if (screen === 'perk' && /^Digit[1-3]$/.test(e.code)) {
       const p = run.perkChoices?.[Number(e.code.at(-1)) - 1];
       if (p) pickPerk(p);
@@ -357,6 +396,8 @@ async function boot() {
   // a HUD do canvas usa a mesma letra dos menus; espera a fonte (no máx. 1,5 s)
   await Promise.race([document.fonts?.load('700 30px Kalam') ?? Promise.resolve(), new Promise((r) => setTimeout(r, 1500))]).catch(() => {});
   bindUi();
+  syncMute();
+  pixelateMenu();
   updateMenuBest();
 
   const params = new URLSearchParams(location.search);
@@ -392,6 +433,7 @@ async function boot() {
   // ganchos para depuração no console
   window.wavesson = {
     get run() { return run; },
+    get renderer() { return renderer; }, // .perf.ms (custo do quadro) e .pixelArt (liga/desliga a arte em pixel)
     startRun,
     // avança a simulação e desenha um quadro (útil com a aba em segundo plano, testes e capturas)
     step(seconds = 1, cmd = { x: 0, y: 0 }) {

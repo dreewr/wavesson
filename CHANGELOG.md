@@ -10,6 +10,8 @@
 - **PWA:** instalável, tela cheia, offline.
 - **Trilha original** sintetizada: "Samba do Arrastão".
 - **Doc pública** `docs/JOGABILIDADE.md` gerada do código + teste/CI que barra doc desatualizada.
+- **Arte unificada em pixel art** (jogo e menu): mesma grade de pixel, contorno e paleta pra tudo; sprites convertidos uma vez e guardados em cache (quadro de 7,9 ms → 0,5 ms).
+- **Botão de som** no menu, na pausa e em OPTIONS (além da tecla M).
 
 ## 2026-11-14
 

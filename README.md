@@ -11,8 +11,8 @@ pegando chinelo, celular e bolsa, recrutando a galera e fugindo de cachorro, sur
 [![Deploy](https://github.com/dreewr/wavesson/actions/workflows/pages.yml/badge.svg)](https://github.com/dreewr/wavesson/actions/workflows/pages.yml)
 [![Testes](https://github.com/dreewr/wavesson/actions/workflows/ci.yml/badge.svg)](https://github.com/dreewr/wavesson/actions/workflows/ci.yml)
 
-<img src="docs/img/jogo-horizontal.jpg" alt="Wavesson no computador" width="72%" />
-<img src="docs/img/jogo-vertical.jpg" alt="Wavesson no celular em pé" width="22%" />
+<img src="docs/img/jogo-horizontal.png" alt="Wavesson no computador" width="72%" />
+<img src="docs/img/jogo-vertical.png" alt="Wavesson no celular em pé" width="22%" />
 
 </div>
 
@@ -30,7 +30,7 @@ pegando chinelo, celular e bolsa, recrutando a galera e fugindo de cachorro, sur
 | Mover o bando | WASD / setas | arrastar o dedo |
 | Pique | Espaço / Shift | botão PIQUE |
 | Pausa | P / Esc | botão II |
-| Som | M | — |
+| Som | M | botão 🔊 no menu / pausa |
 | Vantagem | 1 2 3 | tocar no cartão |
 
 📖 **Tudo sobre inimigos, pontuação, vantagens e como a dificuldade sobe:** [`docs/JOGABILIDADE.md`](docs/JOGABILIDADE.md)
@@ -48,7 +48,11 @@ pegando chinelo, celular e bolsa, recrutando a galera e fugindo de cachorro, sur
   **refeita** do zero. O ranking local confere cada recorde; o online (opcional) confere no servidor.
 - **Telemetria e estatísticas:** onde e do que você morre, mediana, histograma — e um relatório que junta
   dados de vários jogadores pra calibrar o jogo com gente de verdade.
+- **Arte unificada em pixel art:** sprites de 2017, objetos vetoriais e personagens novos passam pela mesma
+  conversão (pixel 2×, contorno de 1 pixel, paleta de praia com pontilhado), feita uma vez e guardada em cache —
+  o quadro custa menos de 1 ms. A interface fica em papel manuscrito, nítida, de propósito.
 - **Trilha original** sintetizada na hora ("Samba do Arrastão") + as faixas da hackathon no seletor.
+- **Som:** botão 🔊 no menu, opção na pausa e em OPTIONS, ou tecla M.
 
 ## Rodar e mexer
 
@@ -86,7 +90,8 @@ src/
   stats.js        estatísticas (jogo e ferramentas)
   telemetry.js    registro local das partidas, ranking local, export
   online.js       cliente do ranking online (opcional)
-  render.js       canvas: praia, personagens, HUD
+  render.js       canvas: praia, personagens (sprites em cache), HUD
+  pixel.js        a arte unificada: paleta, pontilhado, contorno
   audio.js        sons; synth-music.js é a trilha original
   main.js         telas, loop, cola tudo
 tools/            stamp (build), gen-docs, analyze, verify-run
@@ -116,7 +121,6 @@ Em 2026 virou este roguelike, mantendo a arte, os menus e o HUD originais. O pro
 
 ## Pendências conhecidas
 
-- **Arte unificada:** os sprites de 2017 convivem com personagens desenhados em código (bombeiros, banhista, viatura, surfista).
 - **Tema:** "arrastão" nasceu como piada de hackathon; um lançamento aberto (lojas, divulgação) pede decidir se mantém ou reenquadra.
 - **Ranking online:** pronto, mas desligado — ver [`docs/RANKING-ONLINE.md`](docs/RANKING-ONLINE.md).
 - **Licença:** ainda não definida.

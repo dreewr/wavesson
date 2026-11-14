@@ -124,11 +124,15 @@
 
     <section id="music" class="screen beach">
       <img class="sprite" src="assets/ui/btn_options.png" alt="Options" style="--x:300px;--y:200px;--w:441px;--h:85px;--px:360px;--py:240px;--pw:397px;--ph:77px" />
+      <button class="link mute-label opt-mute" data-action="mute" style="--x:300px;--y:290px;--px:360px;--py:310px">som: ligado</button>
       <div class="tracks hand" id="trackList"></div>
       <div class="menu-sea"></div>
       <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px;--px:160px;--py:calc(var(--sh) - 85px);--pw:245px;--ph:66px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
     </section>
   </div>
+
+  <!-- Liga/desliga o som: sempre à mão nos menus (no jogo: pausa ou tecla M) -->
+  <button id="muteBtn" data-action="mute" aria-label="Som ligado">🔊</button>
 
   <!-- Botões de toque (só aparecem em tela sensível ao toque, durante o jogo) -->
   <div id="touch">
@@ -148,6 +152,7 @@
     <div class="paper">
       <h2>Pause</h2>
       <button data-action="resume" class="ink primary">continuar (P)</button>
+      <button data-action="mute" class="ink mute-label">som: ligado (M)</button>
       <button data-action="quit" class="ink">sair pro menu</button>
     </div>
   </section>

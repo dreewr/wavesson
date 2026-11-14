@@ -40,12 +40,13 @@ _Last updated: 2026-11-14_
 | Partida precisa continuar determinística | Ranking e replays dependem disso (`replay refaz a partida` no teste) |
 | Músicas de terceiros só por memória afetiva, repo pessoal | Pra lançamento público/comercial precisam sair; a trilha original sintetizada é a substituta |
 | Commits com e-mail noreply do GitHub | Repo é público |
+| Arte: tudo do mundo passa por `src/pixel.js` (pixel 2×, contorno, paleta) via cache de sprites em `render.js`; UI fica nítida | Unificar 2017 + novos sem redesenhar à mão, a custo ~0 por quadro |
+| Beta publicada em dreewr.github.io/wavesson-beta (repo dreewr/wavesson-beta ← `git push beta feat/jogo-real:main`) | Testar a versão nova sem mexer na main |
 | Caricatura racial do menu de 2017 e sprite com escudo do Corinthians fora do jogo | Estereótipo / marca registrada |
 
 ## Open Questions
 
 - Tema "arrastão" num lançamento aberto (lojas, divulgação): manter, suavizar ou reenquadrar? Decisão do André.
-- Redesenho de arte unificada (sprites 2017 + desenhos procedurais convivem hoje).
 - Ligar o ranking online (criar projeto Supabase).
 
 ## Next Steps
@@ -60,7 +61,8 @@ _Last updated: 2026-11-14_
 1. Mudou inimigo, número de dificuldade, vantagem ou pontuação? Rode `npm run docs` e commite a doc junto.
 2. Elemento novo na praia precisa de entrada em `src/catalog.js` (o teste cobra).
 3. `npm test` antes de qualquer push — o deploy roda os testes e não publica se falhar.
-4. Não quebre o determinismo: nada de `Math.random()`/`Date.now()` dentro de `src/run.js`, `generator.js` ou `difficulty.js` (use o `rng` da run).
+4. Personagem/objeto novo: desenhe normal e passe por `bake()`/`sprite()` no render — nada de desenhar direto no canvas do mundo, senão foge da arte unificada.
+5. Não quebre o determinismo: nada de `Math.random()`/`Date.now()` dentro de `src/run.js`, `generator.js` ou `difficulty.js` (use o `rng` da run).
 
 ## Self-Maintenance Rules
 

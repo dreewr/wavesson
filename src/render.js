@@ -1,4 +1,11 @@
 // Desenho no canvas. Lê o estado da Run, nunca o altera.
+//
+// Arte unificada (ver pixel.js): todo sprite do mundo — os PNGs de 2017 e os
+// bonecos desenhados em código — é convertido pra pixel art UMA vez, no
+// tamanho em que aparece (baixa resolução + contorno + paleta), guardado em
+// cache e depois só ampliado sem suavizar, alinhado à grade de pixels.
+// Custo por quadro ≈ o de desenhar sprites normais. A interface (bilhete,
+// letra manuscrita, avisos) é desenhada nítida por cima, de propósito.
 
 import { CREW } from './config.js';
 import { LANDSCAPE } from './layout.js';
@@ -6,11 +13,13 @@ import { CREW_SKINS } from './defs.js';
 import { viewport } from './screen.js';
 import { PERKS as PERK_LIST } from './perks.js';
 import { RUSH } from './run.js';
+import { PIXEL, outline, quantize } from './pixel.js';
 
 const DEEP_BLUE = '#10298f';
 const TOUCH = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 // a água começa ~740px pra dentro do sprite do mar (1024px); no layout original ele ficava em x=610
 const SEA_EDGE_IN_SPRITE = 740;
+const snap = (v) => Math.round(v / PIXEL) * PIXEL;
 
 // Onde fica cada peça da HUD em cada enquadramento. O bilhete é desenhado nas
 // coordenadas do layout horizontal e só transladado/escalado pro vertical.
@@ -20,8 +29,13 @@ const HUD = {
 };
 
 export function createRenderer(canvas, images) {
-  const ctx = canvas.getContext('2d');
+  const mainCtx = canvas.getContext('2d');
+  let ctx = mainCtx; // troca temporariamente quando um boneco é "assado" em sprite
   const view = { scale: 1, ox: 0, oy: 0 };
+  const perf = { ms: 0, baked: 0 };
+  // avisos desenhados depois dos personagens, pra ficarem por cima
+  const deferred = [];
+  const later = (fn) => deferred.push(fn);
   // tamanho do mundo visível: vem do layout da run que está sendo desenhada
   let VIEW_W = LANDSCAPE.w, VIEW_H = LANDSCAPE.h, ZONE = LANDSCAPE.zone, hud = HUD.landscape;
 
@@ -52,23 +66,80 @@ export function createRenderer(canvas, images) {
     floaters.push({ text, x, y, color, size, t: 0 });
   }
 
-  function anim(base, t, fps = 6) {
-    return images[`${base}_${Math.floor(t * fps) % 2}`];
+  // ------------------------------------------------------------ sprites em pixel art (cache)
+
+  const cache = new Map();
+
+  // Desenha `draw` (em coordenadas do mundo, 0..w x 0..h) numa tela pequena,
+  // aplica contorno e paleta e guarda. 1 pixel de folga em volta pro contorno.
+  function bake(key, w, h, draw, { withOutline = true } = {}) {
+    let a = cache.get(key);
+    if (a) return a;
+    const cw = Math.ceil(w / PIXEL) + 2, ch = Math.ceil(h / PIXEL) + 2;
+    const c = document.createElement('canvas');
+    c.width = cw;
+    c.height = ch;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.imageSmoothingQuality = 'high';
+    g.setTransform(1 / PIXEL, 0, 0, 1 / PIXEL, 1, 1);
+    const prev = ctx;
+    ctx = g;
+    try { draw(g); } finally { ctx = prev; }
+    const data = g.getImageData(0, 0, cw, ch);
+    if (withOutline) outline(data);
+    quantize(data);
+    g.putImageData(data, 0, 0);
+    a = { c, w: cw * PIXEL, h: ch * PIXEL };
+    cache.set(key, a);
+    perf.baked++;
+    return a;
   }
+
+  // sprite de imagem (PNG) no tamanho em que aparece
+  function sprite(name, w, h, opts) {
+    return bake(`${name}@${w}x${h}`, w, h, (g) => g.drawImage(images[name], 0, 0, w, h), opts);
+  }
+
+  // desenha um sprite do cache alinhado à grade de pixels
+  function put(a, x, y, { flip = false, alpha = 1 } = {}) {
+    const sx = snap(x) - PIXEL, sy = snap(y) - PIXEL;
+    if (alpha !== 1) ctx.globalAlpha = alpha;
+    if (flip) {
+      ctx.save();
+      ctx.translate(sx + a.w, sy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(a.c, 0, 0, a.w, a.h);
+      ctx.restore();
+    } else ctx.drawImage(a.c, sx, sy, a.w, a.h);
+    if (alpha !== 1) ctx.globalAlpha = 1;
+  }
+
+  // elipse "em pixel": faixas horizontais alinhadas à grade (sombras)
+  function pixelEllipse(cx, cy, rx, ry, color) {
+    ctx.fillStyle = color;
+    const rows = Math.max(1, Math.round(ry / PIXEL));
+    for (let i = -rows; i <= rows; i++) {
+      const t = i / (rows + 0.5);
+      const hw = snap(rx * Math.sqrt(Math.max(0, 1 - t * t)));
+      if (hw <= 0) continue;
+      ctx.fillRect(snap(cx) - hw, snap(cy) + i * PIXEL, hw * 2, PIXEL);
+    }
+  }
+
+  const anim = (base, t, fps = 6) => `${base}_${Math.floor(t * fps) % 2}`;
 
   // ------------------------------------------------------------ cenário
 
-  // textura de areia: pontinhos claros e escuros num ladrilho que rola com a praia
+  // textura de areia: pontinhos alinhados à grade de pixels, num ladrilho que rola com a praia
   const sandTile = (() => {
     const c = document.createElement('canvas');
     c.width = c.height = 160;
     const g = c.getContext('2d');
     let seed = 7;
     const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    for (let i = 0; i < 520; i++) {
-      g.fillStyle = rnd() < 0.55 ? 'rgba(120,85,20,0.16)' : 'rgba(255,255,255,0.28)';
-      const s = rnd() < 0.85 ? 2 : 3;
-      g.fillRect(Math.floor(rnd() * 160), Math.floor(rnd() * 160), s, s);
+    for (let i = 0; i < 300; i++) {
+      g.fillStyle = rnd() < 0.55 ? 'rgba(150,105,30,0.22)' : 'rgba(255,255,240,0.38)';
+      g.fillRect(snap(rnd() * 158), snap(rnd() * 158), PIXEL, PIXEL);
     }
     return c;
   })();
@@ -80,43 +151,44 @@ export function createRenderer(canvas, images) {
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     sandPattern ??= ctx.createPattern(sandTile, 'repeat');
     ctx.save();
-    ctx.translate(0, -(cam % 160));
+    ctx.translate(0, -snap(cam % 160));
     ctx.fillStyle = sandPattern;
     ctx.fillRect(0, 0, VIEW_W, VIEW_H + 160);
     ctx.restore();
 
-    // areia molhada escurecendo até a beira d'água
-    const wet0 = ZONE.shallow - 120 + run.tide.offset;
-    const wet = ctx.createLinearGradient(wet0, 0, ZONE.shallow + run.tide.offset + 10, 0);
-    wet.addColorStop(0, 'rgba(150,110,40,0)');
-    wet.addColorStop(1, 'rgba(150,110,40,0.28)');
-    ctx.fillStyle = wet;
-    ctx.fillRect(wet0, 0, 140, VIEW_H);
+    // areia molhada: degraus de cor até a beira d'água (nada de degradê liso)
+    const edge = ZONE.shallow + run.tide.offset;
+    for (let i = 0; i < 6; i++) {
+      ctx.fillStyle = `rgba(150,110,40,${0.05 + i * 0.045})`;
+      ctx.fillRect(snap(edge - 120 + i * 20), 0, 20, VIEW_H);
+    }
 
     // calçadão (tile vertical)
-    const walk = images[run.biome.walk];
-    const tileH = (walk.height * ZONE.walkEnd) / walk.width;
-    for (let y = -(cam % tileH); y < VIEW_H; y += tileH) ctx.drawImage(walk, 0, y, ZONE.walkEnd, tileH);
+    const walkImg = images[run.biome.walk];
+    const tileH = snap((walkImg.height * ZONE.walkEnd) / walkImg.width);
+    const walk = sprite(run.biome.walk, ZONE.walkEnd, tileH, { withOutline: false });
+    for (let y = -snap(cam % tileH); y < VIEW_H; y += tileH) put(walk, 0, y);
     // meio-fio do calçadão + sombra na areia
     ctx.fillStyle = '#d8d2c2';
-    ctx.fillRect(ZONE.walkEnd - 2, 0, 7, VIEW_H);
+    ctx.fillRect(snap(ZONE.walkEnd - 2), 0, PIXEL * 3, VIEW_H);
     ctx.fillStyle = 'rgba(0,0,0,0.22)';
-    ctx.fillRect(ZONE.walkEnd + 5, 0, 7, VIEW_H);
+    ctx.fillRect(snap(ZONE.walkEnd + 4), 0, PIXEL * 3, VIEW_H);
 
     // mar animado; a onda empurra tudo pra esquerda
-    const off = run.tide.offset;
-    const sea = images[`sea_${Math.floor(run.time * 5) % 6}`];
-    const seaX = ZONE.shallow - SEA_EDGE_IN_SPRITE + off;
-    for (let y = -(cam % 1024); y < VIEW_H; y += 1024) ctx.drawImage(sea, seaX, y, 1024, 1024);
+    const seaX = ZONE.shallow - SEA_EDGE_IN_SPRITE + run.tide.offset;
+    const sea = sprite(`sea_${Math.floor(run.time * 5) % 6}`, 1024, 1024, { withOutline: false });
+    for (let y = -snap(cam % 1024); y < VIEW_H; y += 1024) put(sea, seaX, y);
     if (seaX + 1024 < VIEW_W) {
       ctx.fillStyle = DEEP_BLUE;
-      ctx.fillRect(seaX + 1024, 0, VIEW_W - seaX - 1024, VIEW_H);
+      ctx.fillRect(snap(seaX + 1024), 0, VIEW_W, VIEW_H);
     }
 
     if (run.tide.phase === 'warn' && Math.floor(run.time * 6) % 2 === 0) {
-      ctx.fillStyle = 'rgba(16,41,143,0.25)';
-      ctx.fillRect(ZONE.shallow - run.tide.reach, 0, run.tide.reach, VIEW_H);
-      label('ONDA VINDO!', ZONE.shallow - run.tide.reach / 2, 90, '#fff', 44, '#10298f');
+      later(() => {
+        ctx.fillStyle = 'rgba(16,41,143,0.25)';
+        ctx.fillRect(ZONE.shallow - run.tide.reach, 0, run.tide.reach, VIEW_H);
+        label('ONDA VINDO!', ZONE.shallow - run.tide.reach / 2, 90, '#fff', 44, '#10298f');
+      });
     }
   }
 
@@ -128,47 +200,23 @@ export function createRenderer(canvas, images) {
     if (OWN_SHADOW.has(e.kind)) return;
     const h = e.def.hit || { ox: 0, oy: e.h - 20, w: e.w, h: 20 };
     const deadly = e.def.role === 'deadly';
-    ctx.fillStyle = deadly ? 'rgba(210,25,25,0.32)' : 'rgba(60,40,0,0.22)';
-    ctx.beginPath();
-    ctx.ellipse(e.x + h.ox + h.w / 2, sy + h.oy + h.h - 3, h.w * 0.6, Math.max(6, h.h * 0.28), 0, 0, Math.PI * 2);
-    ctx.fill();
+    pixelEllipse(e.x + h.ox + h.w / 2, sy + h.oy + h.h - 3, h.w * 0.6, Math.max(6, h.h * 0.28), deadly ? 'rgba(210,25,25,0.4)' : 'rgba(60,40,0,0.24)');
   }
 
   function drawEntity(run, e) {
     const sy = e.y - run.cameraY;
     groundShadow(e, sy);
     switch (e.kind) {
-      case 'dog': {
-        const img = anim('dog', e.t, 8);
-        ctx.save();
-        if (e.flip) {
-          ctx.translate(e.x + e.w, sy);
-          ctx.scale(-1, 1);
-          ctx.drawImage(img, 0, 0, e.w, e.h);
-        } else ctx.drawImage(img, e.x, sy, e.w, e.h);
-        ctx.restore();
+      case 'dog':
+        put(sprite(anim('dog', e.t, 8), e.w, e.h), e.x, sy, { flip: e.flip });
         return;
-      }
       case 'vendor':
-        ctx.drawImage(anim('vendor', e.t, 5), e.x, sy, e.w, e.h);
+        put(sprite(anim('vendor', e.t, 5), e.w, e.h), e.x, sy);
         return;
       case 'recruit': {
         const skin = CREW_SKINS[e.skin % CREW_SKINS.length];
-        ctx.drawImage(images[`${skin}_0`], e.x, sy, CREW.w, CREW.h);
-        // balão branco com "!" azul: dá pra ver em qualquer areia
-        const bob = Math.sin(e.t * 6) * 4;
-        const bx = e.x + CREW.w / 2, by = sy - 22 + bob;
-        ctx.fillStyle = '#fff';
-        ctx.strokeStyle = '#222';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(bx, by, 15, 0, Math.PI * 2);
-        ctx.moveTo(bx - 5, by + 13);
-        ctx.lineTo(bx, by + 22);
-        ctx.lineTo(bx + 5, by + 13);
-        ctx.fill();
-        ctx.stroke();
-        label('!', bx, by + 9, '#3a3d9b', 26, '#fff');
+        put(sprite(`${skin}_0`, CREW.w, CREW.h), e.x, sy);
+        put(bubble(), e.x + CREW.w / 2 - 17, sy - 44 + Math.round(Math.sin(e.t * 6) * 2) * PIXEL);
         return;
       }
       case 'police':
@@ -184,256 +232,237 @@ export function createRenderer(canvas, images) {
         drawBanhista(run, e, sy);
         return;
       case 'flipflop': case 'phone': case 'bag': {
-        const pulse = 1 + Math.sin(e.t * 8) * 0.06;
-        const w = e.w * pulse, h = e.h * pulse;
-        // brilho atrás do item
-        const cx = e.x + e.w / 2, cy = sy + e.h / 2, r = Math.max(e.w, e.h) * 0.75;
-        const glow = ctx.createRadialGradient(cx, cy, 2, cx, cy, r);
-        glow.addColorStop(0, 'rgba(255,255,255,0.75)');
-        glow.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = glow;
-        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-        ctx.drawImage(anim(e.kind, e.t, 4), e.x + (e.w - w) / 2, sy + (e.h - h) / 2, w, h);
+        // brilho em pixel atrás do item + leve flutuar
+        const bob = Math.round(Math.sin(e.t * 6)) * PIXEL;
+        pixelEllipse(e.x + e.w / 2, sy + e.h / 2, Math.max(e.w, e.h) * 0.62, Math.max(e.w, e.h) * 0.55, 'rgba(255,255,255,0.35)');
+        put(sprite(anim(e.kind, e.t, 4), e.w, e.h), e.x, sy + bob);
         return;
       }
       default:
-        if (e.sprite) ctx.drawImage(images[e.sprite], e.x, sy, e.w, e.h);
+        if (e.sprite) put(sprite(e.sprite, e.w, e.h), e.x, sy);
     }
+  }
+
+  // balão branco com "!" azul de quem dá pra recrutar
+  function bubble() {
+    return bake('bubble', 34, 44, (g) => {
+      g.fillStyle = '#fff';
+      g.beginPath();
+      g.arc(17, 16, 15, 0, Math.PI * 2);
+      g.moveTo(12, 28);
+      g.lineTo(17, 40);
+      g.lineTo(22, 28);
+      g.fill();
+      g.fillStyle = '#3a3d9b';
+      g.fillRect(14, 4, 6, 16);
+      g.fillRect(14, 23, 6, 5);
+    });
   }
 
   const BOARD_COLORS = ['#ff7043', '#29b6f6', '#ffee58', '#66bb6a', '#ec407a'];
 
-  // Surfista Desatento: um integrante "de sunga" com prancha debaixo do braço
+  // Surfista Desatento: um integrante com prancha debaixo do braço
   // (não havia sprite em 2017; reaproveita a arte do bando + prancha desenhada).
   function drawSurfer(e, sy) {
     const skin = CREW_SKINS[e.skin % CREW_SKINS.length];
     const running = e.state === 'run';
-    const frame = images[`${skin}_${running ? Math.floor(e.t * 12) % 2 : 0}`];
-    const bob = e.state === 'emerge' ? Math.sin(e.t * 14) * 3 : 0;
+    const bob = e.state === 'emerge' ? Math.round(Math.sin(e.t * 14)) * PIXEL : 0;
     const px = e.x + 58, py = sy + bob;
-
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    ctx.beginPath();
-    ctx.ellipse(e.x + e.w / 2, sy + e.h - 4, 70, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.drawImage(frame, px, py, 34, 100);
-
-    // prancha (bico pra esquerda, pra onde ele corre)
-    const by = py + 52;
-    ctx.fillStyle = '#fff';
-    ctx.strokeStyle = '#222';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(e.x + 4, by + 11);
-    ctx.quadraticCurveTo(e.x + 20, by - 2, e.x + 60, by);
-    ctx.lineTo(e.x + e.w - 14, by);
-    ctx.quadraticCurveTo(e.x + e.w, by + 11, e.x + e.w - 14, by + 22);
-    ctx.lineTo(e.x + 60, by + 22);
-    ctx.quadraticCurveTo(e.x + 20, by + 24, e.x + 4, by + 11);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = BOARD_COLORS[e.skin % BOARD_COLORS.length];
-    ctx.fillRect(e.x + 30, by + 8, e.w - 50, 6);
+    pixelEllipse(e.x + e.w / 2, sy + e.h - 4, 70, 8, 'rgba(210,25,25,0.32)');
+    put(sprite(`${skin}_${running ? Math.floor(e.t * 12) % 2 : 0}`, CREW.w, CREW.h), px, py);
+    const board = bake(`board:${e.skin % BOARD_COLORS.length}`, 150, 26, (g) => {
+      g.fillStyle = '#fff';
+      g.beginPath();
+      g.moveTo(4, 12);
+      g.quadraticCurveTo(20, -1, 60, 1);
+      g.lineTo(136, 1);
+      g.quadraticCurveTo(150, 12, 136, 23);
+      g.lineTo(60, 23);
+      g.quadraticCurveTo(20, 25, 4, 12);
+      g.fill();
+      g.fillStyle = BOARD_COLORS[e.skin % BOARD_COLORS.length];
+      g.fillRect(30, 9, 100, 6);
+    });
+    put(board, e.x, py + 51);
 
     if (e.state === 'emerge') {
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
-      ctx.fillRect(e.x + 40, sy + e.h - 10, 70, 6);
-      label('!', px + 17, py - 12, '#e53935', 36);
+      ctx.fillRect(snap(e.x + 40), snap(sy + e.h - 10), 70, PIXEL * 3);
+      later(() => label('!', px + 17, py - 12, '#e53935', 36));
     } else if (running && Math.floor(e.t * 10) % 2 === 0) {
       // respingos de areia
-      ctx.fillStyle = 'rgba(141,110,63,0.6)';
-      ctx.fillRect(e.x + e.w - 6, sy + e.h - 12, 6, 6);
-      ctx.fillRect(e.x + e.w + 6, sy + e.h - 20, 5, 5);
+      ctx.fillStyle = 'rgba(141,110,63,0.7)';
+      ctx.fillRect(snap(e.x + e.w - 6), snap(sy + e.h - 12), PIXEL * 3, PIXEL * 3);
+      ctx.fillRect(snap(e.x + e.w + 6), snap(sy + e.h - 20), PIXEL * 2, PIXEL * 2);
     }
   }
 
   const SKIN = ['#f1c27d', '#e0ac69', '#c68642', '#8d5524'];
 
-  // Bombeiro guarda-vidas de sunga, em pixel art feita no código
-  // (correndo de costas pra câmera, subindo a praia).
+  // Bombeiro guarda-vidas de sunga (correndo de costas pra câmera, subindo a praia).
   function drawBombeiro(e, sy) {
-    const running = e.squad.state === 'run';
-    const ph = running ? Math.floor(e.t * 12) % 2 : 0;
-    const x = Math.round(e.x), y = Math.round(sy);
-    const skin = SKIN[e.tone % SKIN.length];
-    const R = (c, rx, ry, rw, rh) => { ctx.fillStyle = c; ctx.fillRect(x + rx, y + ry, rw, rh); };
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.beginPath();
-    ctx.ellipse(x + 22, y + 97, 16, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // pernas alternando
-    R(skin, 12, 70, 8, ph ? 22 : 26);
-    R(skin, 24, 70, 8, ph ? 26 : 22);
-    R('#222', 11, ph ? 90 : 94, 10, 4);
-    R('#222', 23, ph ? 94 : 90, 10, 4);
-    // sunga vermelha
-    R('#d32f2f', 10, 60, 24, 12);
-    R('#ffd600', 10, 60, 24, 3);
-    // tronco e braços balançando
-    R(skin, 11, 32, 22, 30);
-    R(skin, 3, ph ? 34 : 40, 8, 22);
-    R(skin, 33, ph ? 40 : 34, 8, 22);
-    // cabeça + boné de guarda-vidas (vermelho com aba amarela)
-    R(skin, 14, 14, 16, 18);
-    R('#d32f2f', 12, 6, 20, 10);
-    R('#ffd600', 12, 14, 20, 3);
-    R('#000', 13, 6, 18, 2);
-    // número nas costas
-    R('#fff', 18, 40, 8, 8);
-    R('#d32f2f', 21, 41, 2, 6);
-    R('#d32f2f', 19, 43, 6, 2);
+    const ph = e.squad.state === 'run' ? Math.floor(e.t * 12) % 2 : 0;
+    const tone = e.tone % SKIN.length;
+    pixelEllipse(e.x + 22, sy + 97, 16, 5, 'rgba(210,25,25,0.32)');
+    const art = bake(`bombeiro:${tone}:${ph}`, 44, 100, (g) => {
+      const skin = SKIN[tone];
+      const R = (c, x, y, w, h) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+      R(skin, 12, 70, 8, ph ? 22 : 26);
+      R(skin, 24, 70, 8, ph ? 26 : 22);
+      R('#222', 11, ph ? 90 : 94, 10, 4);
+      R('#222', 23, ph ? 94 : 90, 10, 4);
+      R('#d32f2f', 10, 60, 24, 12);
+      R('#ffd600', 10, 60, 24, 3);
+      R(skin, 11, 32, 22, 30);
+      R(skin, 3, ph ? 34 : 40, 8, 22);
+      R(skin, 33, ph ? 40 : 34, 8, 22);
+      R(skin, 14, 14, 16, 18);
+      R('#d32f2f', 12, 6, 20, 10);
+      R('#ffd600', 12, 14, 20, 3);
+      R('#000', 13, 6, 18, 2);
+      R('#fff', 18, 40, 8, 8);
+      R('#d32f2f', 21, 41, 2, 6);
+      R('#d32f2f', 19, 43, 6, 2);
+    });
+    put(art, e.x, sy);
   }
 
   const BIKINI = ['#e91e63', '#00bcd4', '#ff9800', '#8e24aa', '#43a047', '#f44336'];
   const HAIR = ['#3e2723', '#212121', '#f9a825', '#6d4c41', '#bf360c', '#111'];
   const TOWEL = [['#ff6f91', '#fff'], ['#29b6f6', '#fff'], ['#ffd54f', '#ef6c00'], ['#66bb6a', '#fff']];
 
-  function heart(x, y, r, color = '#e91e63') {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x, y + r * 0.9);
-    ctx.bezierCurveTo(x - r * 1.6, y - r * 0.2, x - r * 0.6, y - r * 1.4, x, y - r * 0.5);
-    ctx.bezierCurveTo(x + r * 0.6, y - r * 1.4, x + r * 1.6, y - r * 0.2, x, y + r * 0.9);
-    ctx.fill();
+  function heartPath(g, x, y, r) {
+    g.beginPath();
+    g.moveTo(x, y + r * 0.9);
+    g.bezierCurveTo(x - r * 1.6, y - r * 0.2, x - r * 0.6, y - r * 1.4, x, y - r * 0.5);
+    g.bezierCurveTo(x + r * 0.6, y - r * 1.4, x + r * 1.6, y - r * 0.2, x, y + r * 0.9);
+    g.fill();
+  }
+  // coração em pixel, centrado em (x, y)
+  function heart(x, y, r, alpha = 1) {
+    const s = Math.round(r) * 2 + 4;
+    const a = bake(`heart:${Math.round(r)}`, s, s, (g) => {
+      g.fillStyle = '#e91e63';
+      heartPath(g, s / 2, s / 2, Math.round(r));
+    });
+    put(a, x - s / 2, y - s / 2, { alpha });
   }
 
   // Banhista deitada de bruços na toalha, de óculos escuros, mexendo o pé.
   function drawBanhista(run, e, sy) {
     const k = e.look ?? 0;
-    const x = Math.round(e.x), y = Math.round(sy);
-    const skin = SKIN[(k + 1) % SKIN.length];
-    const [t1, t2] = TOWEL[k % TOWEL.length];
-    const R = (c, rx, ry, rw, rh) => { ctx.fillStyle = c; ctx.fillRect(x + rx, y + ry, rw, rh); };
 
-    // raio de "perigo": só aparece quando o bando chega perto
+    // raio de "perigo" em pixel: só aparece quando o bando chega perto
     const c = run.crewCenter();
     if (c) {
       const d = Math.hypot(c.x - (e.x + e.w / 2), c.y - (e.y + e.h / 2));
       if (d < e.def.aura * 2.6) {
-        ctx.save();
-        ctx.globalAlpha = Math.min(0.5, (e.def.aura * 2.6 - d) / 200);
-        ctx.strokeStyle = '#ff4f8b';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([10, 10]);
-        ctx.lineDashOffset = -run.time * 30;
-        ctx.beginPath();
-        ctx.ellipse(e.x + e.w / 2, sy + e.h / 2, e.def.aura, e.def.aura * 0.8, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
+        ctx.globalAlpha = Math.min(0.6, (e.def.aura * 2.6 - d) / 180);
+        ctx.fillStyle = '#ff4f8b';
+        const n = 44, rot = run.time * 0.6;
+        for (let i = 0; i < n; i++) {
+          if (i % 2) continue; // tracejado
+          const t = rot + (i / n) * Math.PI * 2;
+          ctx.fillRect(snap(e.x + e.w / 2 + Math.cos(t) * e.def.aura), snap(sy + e.h / 2 + Math.sin(t) * e.def.aura * 0.8), PIXEL * 2, PIXEL * 2);
+        }
+        ctx.globalAlpha = 1;
       }
     }
 
-    // toalha listrada com sombra
     ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    ctx.fillRect(x + 4, y + 22, e.w, 44);
-    for (let i = 0; i < 10; i++) R(i % 2 ? t2 : t1, i * 15, 18, 15, 44);
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y + 18, e.w, 44);
-
-    // pernas (um pé balança)
-    const kick = Math.sin(e.t * 4) > 0 ? -8 : 0;
-    R(skin, 92, 33, 44, 9);
-    R(skin, 92, 44, 36, 9);
-    R(skin, 128, 44 + kick, 8, 10);
-    // biquíni + tronco
-    R(skin, 40, 30, 54, 24);
-    R(BIKINI[k % BIKINI.length], 80, 30, 14, 24);
-    R(BIKINI[k % BIKINI.length], 52, 30, 4, 24);
-    // braço dobrado debaixo da cabeça
-    R(skin, 22, 50, 28, 8);
-    // cabeça, cabelo e óculos
-    R(HAIR[k % HAIR.length], 10, 26, 30, 30);
-    R(skin, 18, 30, 20, 22);
-    R('#111', 18, 34, 20, 5);
-    R('#e53935', 32, 46, 4, 2);
-    // chapéu de praia de vez em quando
-    if (k % 3 === 0) {
-      ctx.fillStyle = '#f4e1a1';
-      ctx.beginPath();
-      ctx.ellipse(x + 18, y + 26, 22, 9, -0.2, 0, Math.PI * 2);
-      ctx.fill();
-      R('#e91e63', 8, 22, 22, 4);
-    }
-    // corações quando alguém do bando já se apaixonou
-    if (e.charmed) {
-      const b = Math.sin(e.t * 5) * 3;
-      heart(x + 70, y + 8 + b, 7);
-    }
+    ctx.fillRect(snap(e.x + 4), snap(sy + 22), e.w, 44);
+    const kick = Math.sin(e.t * 4) > 0 ? 1 : 0;
+    const art = bake(`banhista:${k}:${kick}`, 150, 64, (g) => {
+      const skin = SKIN[(k + 1) % SKIN.length];
+      const [t1, t2] = TOWEL[k % TOWEL.length];
+      const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+      for (let i = 0; i < 10; i++) R(i % 2 ? t2 : t1, i * 15, 18, 15, 44);
+      R(skin, 92, 33, 44, 9);
+      R(skin, 92, 44, 36, 9);
+      R(skin, 128, kick ? 36 : 44, 8, 10);
+      R(skin, 40, 30, 54, 24);
+      R(BIKINI[k % BIKINI.length], 80, 30, 14, 24);
+      R(BIKINI[k % BIKINI.length], 52, 30, 4, 24);
+      R(skin, 22, 50, 28, 8);
+      R(HAIR[k % HAIR.length], 10, 26, 30, 30);
+      R(skin, 18, 30, 20, 22);
+      R('#111', 18, 34, 20, 5);
+      R('#e53935', 32, 46, 4, 2);
+      if (k % 3 === 0) {
+        g.fillStyle = '#f4e1a1';
+        g.beginPath();
+        g.ellipse(18, 26, 22, 9, -0.2, 0, Math.PI * 2);
+        g.fill();
+        R('#e91e63', 8, 22, 22, 4);
+      }
+    });
+    put(art, e.x, sy);
+    if (e.charmed) heart(e.x + 70, sy + 8 + Math.round(Math.sin(e.t * 5)) * PIXEL * 2, 7);
   }
 
   function drawPolice(run, e, sy) {
     if (e.state === 'warn' || e.state === 'waiting') {
-      const blink = Math.floor(e.t * 8) % 2 === 0;
-      const x = e.dir > 0 ? 50 : VIEW_W - 50;
-      ctx.save();
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = blink ? '#e53935' : '#1e5bff';
-      ctx.fillRect(0, sy + 10, VIEW_W, e.h - 20);
-      ctx.restore();
-      ctx.fillStyle = blink ? '#e53935' : '#1e5bff';
-      ctx.beginPath();
-      const d = e.dir;
-      ctx.moveTo(x - 30 * d, sy + 15);
-      ctx.lineTo(x + 30 * d, sy + e.h / 2);
-      ctx.lineTo(x - 30 * d, sy + e.h - 15);
-      ctx.fill();
-      label('POLÍCIA!', x + 110 * d, sy + e.h / 2 + 10, '#fff', 30, '#000');
+      later(() => drawPoliceWarning(e, sy));
       return;
     }
-    // viatura em "pixel art" feita no código (não havia sprite)
-    const { x, w, h } = e;
-    ctx.save();
-    if (e.dir < 0) { ctx.translate(x + w, 0); ctx.scale(-1, 1); } else ctx.translate(x, 0);
+    const blink = Math.floor(e.t * 10) % 2;
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.fillRect(10, sy + h - 14, w - 10, 12);
-    ctx.fillStyle = '#f4f4f4';
-    ctx.fillRect(0, sy + 30, w, 50);
-    ctx.fillStyle = '#222';
-    ctx.fillRect(0, sy + 52, w, 10);
-    ctx.fillStyle = '#f4f4f4';
-    ctx.fillRect(50, sy + 8, 110, 26);
-    ctx.fillStyle = '#7fb7e6';
-    ctx.fillRect(60, sy + 12, 40, 18);
-    ctx.fillRect(110, sy + 12, 40, 18);
-    const blink = Math.floor(e.t * 10) % 2 === 0;
+    ctx.fillRect(snap(e.x + 10), snap(sy + e.h - 14), e.w - 10, PIXEL * 6);
+    // viatura em pixel art feita no código (não havia sprite)
+    const car = bake(`car:${blink}`, 220, 100, (g) => {
+      const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+      R('#f4f4f4', 0, 30, 220, 50);
+      R('#222', 0, 52, 220, 10);
+      R('#f4f4f4', 50, 8, 110, 26);
+      R('#7fb7e6', 60, 12, 40, 18);
+      R('#7fb7e6', 110, 12, 40, 18);
+      R(blink ? '#1e5bff' : '#e53935', 85, 0, 20, 8);
+      R(blink ? '#e53935' : '#1e5bff', 105, 0, 20, 8);
+      R('#111', 30, 74, 34, 20);
+      R('#111', 160, 74, 34, 20);
+      R('#ffd54f', 210, 36, 10, 10);
+    });
+    put(car, e.x, sy, { flip: e.dir < 0 });
+  }
+
+  function drawPoliceWarning(e, sy) {
+    const blink = Math.floor(e.t * 8) % 2 === 0;
+    const x = e.dir > 0 ? 50 : VIEW_W - 50;
+    ctx.save();
+    ctx.globalAlpha = 0.18;
     ctx.fillStyle = blink ? '#e53935' : '#1e5bff';
-    ctx.fillRect(85, sy, 20, 8);
-    ctx.fillStyle = blink ? '#1e5bff' : '#e53935';
-    ctx.fillRect(105, sy, 20, 8);
-    ctx.fillStyle = '#111';
-    for (const wx of [30, 160]) ctx.fillRect(wx, sy + 74, 34, 20);
-    ctx.fillStyle = '#ffd54f';
-    ctx.fillRect(w - 10, sy + 36, 10, 10);
+    ctx.fillRect(0, sy + 10, VIEW_W, e.h - 20);
     ctx.restore();
+    ctx.fillStyle = blink ? '#e53935' : '#1e5bff';
+    ctx.beginPath();
+    const d = e.dir;
+    ctx.moveTo(x - 30 * d, sy + 15);
+    ctx.lineTo(x + 30 * d, sy + e.h / 2);
+    ctx.lineTo(x - 30 * d, sy + e.h - 15);
+    ctx.fill();
+    label('POLÍCIA!', x + 110 * d, sy + e.h / 2 + 10, '#fff', 30, '#000');
   }
 
   function drawMember(run, m) {
     if (m.invulnT > 0 && Math.floor(m.invulnT * 12) % 2 === 0) return;
     const skin = CREW_SKINS[m.skin];
-    const img = images[`${skin}_${Math.floor(m.animT * (m.moving ? 9 : 5)) % 2}`];
+    const art = sprite(`${skin}_${Math.floor(m.animT * (m.moving ? 9 : 5)) % 2}`, CREW.w, CREW.h);
     const sy = m.y - run.cameraY;
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    ctx.beginPath();
-    ctx.ellipse(m.x + CREW.w / 2, sy + CREW.h - 2, 18, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
+    pixelEllipse(m.x + CREW.w / 2, sy + CREW.h - 2, 18, 6, 'rgba(0,0,0,0.2)');
     if (m.dashing) {
-      ctx.globalAlpha = 0.3;
-      ctx.drawImage(img, m.x, sy - 24, CREW.w, CREW.h);
-      ctx.globalAlpha = 0.15;
-      ctx.drawImage(img, m.x, sy - 48, CREW.w, CREW.h);
-      ctx.globalAlpha = 1;
+      // rastro do pique
+      put(art, m.x, sy - 24, { alpha: 0.35 });
+      put(art, m.x, sy - 48, { alpha: 0.18 });
     }
-    ctx.drawImage(img, m.x, sy, CREW.w, CREW.h);
-    if (m.slowT > 0) label('~', m.x + CREW.w / 2, sy - 4, '#8d6e3f', 28);
+    put(art, m.x, sy);
+    if (m.slowT > 0) later(() => label('~', m.x + CREW.w / 2, sy - 4, '#8d6e3f', 28));
     if (m.loveT > 0) {
       // apaixonado: corações subindo e balançando em volta da cabeça
       for (let i = 0; i < 3; i++) {
         const ph = (m.animT * 1.4 + i / 3) % 1;
-        heart(m.x + CREW.w / 2 + Math.sin((ph + i) * 6) * 12, sy - 6 - ph * 34, 6 + i, `rgba(233,30,99,${1 - ph})`);
+        heart(m.x + CREW.w / 2 + Math.sin((ph + i) * 6) * 12, sy - 6 - ph * 34, 6 + i, 1 - ph);
       }
     }
-
   }
 
   // ------------------------------------------------------------ HUD
@@ -748,11 +777,27 @@ export function createRenderer(canvas, images) {
     ctx.globalAlpha = 1;
   }
 
+  // prepara os sprites grandes/comuns antes do jogo (evita engasgo na 1ª aparição)
+  function warm(layout) {
+    const z = layout.zone;
+    for (let i = 0; i < 6; i++) sprite(`sea_${i}`, 1024, 1024, { withOutline: false });
+    for (const walk of ['walk_copacabana', 'walk_ipanema']) {
+      const img = images[walk];
+      sprite(walk, z.walkEnd, snap((img.height * z.walkEnd) / img.width), { withOutline: false });
+    }
+    for (const s of CREW_SKINS) for (const f of [0, 1]) sprite(`${s}_${f}`, CREW.w, CREW.h);
+  }
+
   return {
     float,
+    warm,
     shake(amount) { shake = Math.max(shake, amount); },
+    perf,
     draw(run, dt, { best = 0, stick } = {}) {
+      const t0 = performance.now();
       useLayout(run.layout);
+      deferred.length = 0;
+      ctx = mainCtx;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -763,16 +808,21 @@ export function createRenderer(canvas, images) {
       ctx.beginPath();
       ctx.rect(0, 0, VIEW_W, VIEW_H);
       ctx.clip();
-
+      // mundo: sprites em pixel art ampliados sem suavizar
+      ctx.imageSmoothingEnabled = false;
       drawBeach(run);
       for (const item of run.drawList()) {
         if (item.type === 'member') drawMember(run, item.m);
         else drawEntity(run, item.e);
       }
+      ctx.imageSmoothingEnabled = true;
+      // avisos e textos, nítidos por cima
+      for (const fn of deferred) fn();
       drawFloaters(run, dt);
       ctx.restore();
       drawHud(run, best);
       if (stick) drawStick(stick);
+      perf.ms = perf.ms * 0.9 + (performance.now() - t0) * 0.1;
     },
   };
 }
