@@ -1,6 +1,8 @@
 // Teclado (WASD / setas) + toque/mouse como joystick virtual
 // (arraste a partir de onde encostou). Espaço/Shift ou o botão PIQUE = arrancada.
 
+import { toLocal } from './screen.js';
+
 const KEYS = {
   ArrowLeft: [-1, 0], KeyA: [-1, 0],
   ArrowRight: [1, 0], KeyD: [1, 0],
@@ -28,15 +30,17 @@ export function createInput(canvas, toWorldScale) {
   canvas.addEventListener('pointerdown', (e) => {
     stick.active = true;
     stick.id = e.pointerId;
-    stick.ox = e.clientX;
-    stick.oy = e.clientY;
+    const p = toLocal(e.clientX, e.clientY);
+    stick.ox = p.x;
+    stick.oy = p.y;
     stick.x = stick.y = 0;
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', (e) => {
     if (!stick.active || e.pointerId !== stick.id) return;
     const radius = 70;
-    const dx = e.clientX - stick.ox, dy = e.clientY - stick.oy;
+    const p = toLocal(e.clientX, e.clientY);
+    const dx = p.x - stick.ox, dy = p.y - stick.oy;
     stick.x = Math.max(-1, Math.min(1, dx / radius));
     stick.y = Math.max(-1, Math.min(1, dy / radius));
   });

@@ -2,6 +2,7 @@
 
 import { VIEW_W, VIEW_H, ZONE, CREW } from './config.js';
 import { CREW_SKINS } from './defs.js';
+import { viewport } from './screen.js';
 import { PERKS as PERK_LIST } from './perks.js';
 import { RUSH } from './run.js';
 
@@ -16,7 +17,7 @@ export function createRenderer(canvas, images) {
 
   function resize() {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = window.innerWidth, h = window.innerHeight;
+    const { w, h } = viewport();
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     canvas.style.width = `${w}px`;
@@ -548,7 +549,7 @@ export function createRenderer(canvas, images) {
   function drawStick(stick) {
     if (!stick.active) return;
     // o joystick é desenhado em coordenadas de tela (CSS px → canvas px)
-    const dpr = canvas.width / window.innerWidth;
+    const dpr = canvas.width / viewport().w;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 0.35;
     ctx.fillStyle = '#fff';

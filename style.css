@@ -21,14 +21,26 @@ html, body {
 body.in-menu { background: var(--sand); }
 body.in-menu canvas { visibility: hidden; }
 
-canvas { display: block; position: fixed; inset: 0; }
+/* tudo mora em #root; no celular em pé ele é girado 90° (ver src/screen.js) */
+#root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  transform-origin: top left;
+}
+html.rotated #root { transform: rotate(90deg) translateY(-100%); }
+
+canvas { display: block; position: absolute; inset: 0; }
 
 .hand { font-family: var(--hand); }
 
 /* ------------------------------------------------------------ palco 1600x720 */
 
 #stage {
-  position: fixed;
+  position: absolute;
   left: 50%;
   top: 50%;
   width: 1600px;
@@ -162,7 +174,7 @@ canvas { display: block; position: fixed; inset: 0; }
 /* ------------------------------------------------------------ janelas no jogo */
 
 .overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   display: none;
   align-items: center;
@@ -241,7 +253,7 @@ button.ink:hover, button.ink:focus-visible { color: var(--blue); text-decoration
   body.playing #touch { display: block; }
 }
 #touch button {
-  position: fixed;
+  position: absolute;
   font: 700 22px var(--hand);
   color: var(--ink);
   background: #fffdf2;

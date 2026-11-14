@@ -6,6 +6,7 @@ import { createRenderer } from './render.js';
 import { createInput } from './input.js';
 import { createAudio, TRACKS } from './audio.js';
 import { randomSeed } from './rng.js';
+import { applyOrientation, viewport, tryLandscapeFullscreen } from './screen.js';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('game');
@@ -35,7 +36,9 @@ function show(id) {
 }
 
 function fitStage() {
-  const s = Math.min(innerWidth / 1600, innerHeight / 720);
+  applyOrientation();
+  const { w, h } = viewport();
+  const s = Math.min(w / 1600, h / 720);
   document.getElementById('stage').style.setProperty('--s', s);
 }
 
@@ -158,8 +161,8 @@ function bindUi() {
     if (!action) return;
     audio.startMusic();
     switch (action) {
-      case 'play': return startRun();
-      case 'daily': return startRun(todaySeed());
+      case 'play': tryLandscapeFullscreen(); return startRun();
+      case 'daily': tryLandscapeFullscreen(); return startRun(todaySeed());
       case 'howto': $('howto').dataset.page = 1; return show('howto');
       case 'next': return howtoPage(1);
       case 'prev': return howtoPage(-1);
@@ -194,6 +197,7 @@ function bindUi() {
 async function boot() {
   fitStage();
   addEventListener('resize', fitStage);
+  screen.orientation?.addEventListener?.('change', () => setTimeout(fitStage, 50));
   audio = createAudio();
   audio.init();
   const images = await loadImages((p) => { $('loadpct').textContent = `${Math.round(p * 100)}%`; });
