@@ -3,6 +3,30 @@
 
 export const TIER_LENGTH = 150; // metros por "nível"
 
+// Quanto cada tipo de fileira "custa" do orçamento de ameaça. Coisas boas são de graça.
+export const PATTERN_COST = {
+  loot: 0,
+  recruit: 0,
+  castles: 0.8,
+  solids: 1,
+  vendor: 1,
+  banhista: 1.5,
+  dog: 2,
+  lifeguard: 2.5,
+  surfer: 2.5,
+  police: 3.5,
+  combo: 3.5,
+  squad: 4,
+};
+
+// Ritmo em serra: a tensão sobe ao longo de cada praia (400 m) e despenca na
+// troca, onde vem a Hora do Arrastão (alívio). 0,8 → 1,25.
+export const SAW_LENGTH = 400;
+export function intensityAt(meters) {
+  const phase = (Math.max(0, meters) % SAW_LENGTH) / SAW_LENGTH;
+  return 0.8 + 0.45 * phase;
+}
+
 const lerp = (a, b, t) => a + (b - a) * t;
 const sat = (x) => Math.max(0, Math.min(1, x));
 
@@ -13,8 +37,13 @@ export function difficultyAt(meters) {
   const ramp = sat(m / 1500);
   const late = Math.max(0, m - 1500) / 1000;
 
+  const intensity = intensityAt(m);
   return {
     tier,
+    intensity,
+    // orçamento de ameaça ganho a cada fileira (gasto pelos padrões; ver PATTERN_COST)
+    threatPerRow: (lerp(1.1, 3.0, ramp) + late * 0.4) * intensity,
+    threatCap: lerp(4, 9, ramp) + late,
     scrollSpeed: Math.min(560, lerp(170, 430, ramp) + late * 40),
     // distância vertical entre "fileiras" de conteúdo
     rowGap: Math.max(140, lerp(300, 170, ramp) - late * 10),

@@ -23,6 +23,7 @@ export function makeLayout(kind = 'landscape', height) {
       tideScale: 0.42, // a onda avança proporcional à largura da areia
       speedMult: 1.3, // mais visão à frente → praia um pouco mais rápida
       rowGapMult: 1.15, // praia estreita: fileiras mais espaçadas pra não entupir
+      threatMult: 2.4, // orçamento de ameaça por fileira (calibrado por simulação)
       start: { x: 250, y: 300 },
     };
   }
@@ -36,6 +37,7 @@ export function makeLayout(kind = 'landscape', height) {
     tideScale: 1,
     speedMult: 1,
     rowGapMult: 1,
+    threatMult: 1,
     start: { x: 720, y: 260 },
   };
 }

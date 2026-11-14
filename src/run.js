@@ -54,6 +54,7 @@ export class Run {
     this.dash = { t: 0, cd: 0 };
     this.combo = { n: 0, t: 0, best: 0 };
     this.rush = { t: 0, fromY: -1, toY: -1 };
+    this.threat = 0; // orçamento de ameaça acumulado
 
     // formação inicial, parecida com a do layout Track de 2017
     for (let i = 0; i < CREW.startSize; i++) {
@@ -193,7 +194,9 @@ export class Run {
     while (this.nextRowY < this.cameraY + this.layout.h + 400) {
       const diff = difficultyAt(this.nextRowY / PX_PER_METER);
       const rush = this.nextRowY >= this.rush.fromY && this.nextRowY < this.rush.toY;
-      const { specs } = generateRow(this.rng, this.nextRowY, diff, { recruitBoost: this.recruitBoost, rush, layout: this.layout });
+      this.threat = Math.min(diff.threatCap * this.layout.threatMult, this.threat + diff.threatPerRow * this.layout.threatMult);
+      const { specs, cost } = generateRow(this.rng, this.nextRowY, diff, { recruitBoost: this.recruitBoost, rush, layout: this.layout, budget: this.threat });
+      this.threat -= cost;
       for (const s of specs) this.spawn(s, diff);
       this.nextRowY += diff.rowGap * this.layout.rowGapMult * this.rng.range(0.8, 1.2);
     }

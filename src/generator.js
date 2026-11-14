@@ -7,6 +7,7 @@
 
 import { DEFS } from './defs.js';
 import { LANDSCAPE } from './layout.js';
+import { PATTERN_COST } from './difficulty.js';
 
 export const LANE_MIN = LANDSCAPE.laneMin;
 export const LANE_MAX = LANDSCAPE.laneMax;
@@ -185,10 +186,15 @@ export function generateRow(rng, y, diff, opts = {}) {
     ? { loot: 6, recruit: 2.2, castles: 1.2, solids: 1.5, dog: 0.4 } // Hora do Arrastão: fartura
     : { ...diff.weights };
   if (opts.recruitBoost) weights.recruit *= opts.recruitBoost;
+  // orçamento de ameaça: só entra o que a praia "pode pagar" agora
+  if (opts.budget != null) {
+    for (const k of Object.keys(weights)) if ((PATTERN_COST[k] ?? 0) > opts.budget) weights[k] = 0;
+    if (!Object.values(weights).some((w) => w > 0)) weights.loot = 1;
+  }
   const pattern = rng.weighted(weights);
   const specs = PATTERNS[pattern](rng, y, diff, L);
   if (rng.chance(0.25)) {
     specs.unshift({ kind: 'towel', x: rng.range(L.zone.sandStart, L.zone.sandEnd - 200), y: y + rng.range(-120, 120) });
   }
-  return { pattern, specs };
+  return { pattern, specs, cost: PATTERN_COST[pattern] ?? 0 };
 }

@@ -366,3 +366,38 @@ test('replay refaz a partida exatamente e o verificador confirma a pontuação',
     assert.ok(rec.frames.length < rec.claimed.ticks, 'gravação comprimida');
   }
 });
+
+// ------------------------------------------------------------ orçamento de ameaça
+import { PATTERN_COST, intensityAt, SAW_LENGTH } from '../src/difficulty.js';
+
+test('orçamento de ameaça: nenhuma fileira gasta mais do que a praia tem', () => {
+  const rng = createRng('orcamento');
+  for (let i = 0; i < 3000; i++) {
+    const budget = rng.range(0, 6);
+    const { pattern, cost } = generateRow(rng, i * 200, difficultyAt(rng.range(0, 3000)), { budget });
+    assert.ok(cost <= budget + 1e-9, `${pattern} custa ${cost} com orçamento ${budget}`);
+    assert.equal(cost, PATTERN_COST[pattern] ?? 0);
+  }
+  // sem orçamento só sai coisa de graça
+  for (let i = 0; i < 200; i++) assert.equal(generateRow(rng, 0, difficultyAt(900), { budget: 0 }).cost, 0);
+});
+
+test('ritmo em serra: tensão sobe dentro de cada praia e alivia na troca', () => {
+  assert.ok(intensityAt(SAW_LENGTH - 1) > intensityAt(10));
+  assert.ok(intensityAt(SAW_LENGTH + 5) < intensityAt(SAW_LENGTH - 5));
+  assert.ok(difficultyAt(1200).threatPerRow > difficultyAt(100).threatPerRow);
+});
+
+test('mais longe na praia, mais ameaça de fato gerada', () => {
+  const count = (from) => {
+    const run = new Run({ seed: 'densidade' });
+    run.cameraY = from * 100;
+    run.nextRowY = run.cameraY + 720;
+    run.crew.forEach((m) => (m.y = run.cameraY + 300));
+    run.entities = [];
+    run.spawnAhead();
+    for (let i = 0; i < 40; i++) { run.cameraY += 400; run.spawnAhead(); }
+    return run.entities.filter((e) => e.def.role === 'deadly').length;
+  };
+  assert.ok(count(1500) > count(0) * 1.5, `${count(0)} → ${count(1500)}`);
+});
