@@ -337,3 +337,5 @@ html.portrait .track { font-size: 34px; }
 
 html.portrait .stats-wrap { left: 40px; right: 40px; top: 190px; height: auto; grid-template-columns: 1fr; gap: 14px; }
 html.portrait .rank { max-height: 230px; }
+
+[hidden] { display: none !important; }

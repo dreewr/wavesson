@@ -1,6 +1,8 @@
 // Música/ambiente com <audio> e efeitos sintetizados com WebAudio
 // (o projeto original só tinha música, a sirene e a vinheta do gás).
 
+import { createSynthMusic } from './synth-music.js';
+
 const MUTE_KEY = 'wavesson.muted';
 const TRACK_KEY = 'wavesson.track';
 
@@ -12,6 +14,7 @@ function themeSrc() {
 // As faixas que a equipe separou na hackathon de 2017.
 export const TRACKS = [
   { id: 'tema', name: 'Tema do Wavesson', src: themeSrc() },
+  { id: 'samba', name: 'Samba do Arrastão (trilha original)', synth: true },
   { id: 'sweet', name: 'Sweet Dreams', src: 'assets/audio/music/sweet-dreams.m4a' },
   { id: 'naruto', name: 'Naruto: The Raising Fighting Spirit', src: 'assets/audio/music/naruto.m4a' },
   { id: 'familia', name: 'A Grande Família', src: 'assets/audio/music/grande-familia.m4a' },
@@ -35,12 +38,24 @@ export function createAudio() {
 
   function resolveTrack() {
     if (trackId !== 'aleatorio') return TRACKS.find((t) => t.id === trackId);
-    const pool = TRACKS.filter((t) => t.src && !music.src.endsWith(t.src));
+    const pool = TRACKS.filter((t) => (t.src || t.synth) && t !== current);
     return pool[Math.floor(Math.random() * pool.length)];
   }
+  let current = null;
   function loadTrack() {
-    const t = resolveTrack();
-    if (!music.src.endsWith(t.src)) music.src = t.src;
+    current = resolveTrack();
+    if (current.src && !music.src.endsWith(current.src)) music.src = current.src;
+  }
+  // toca a faixa atual: arquivo (<audio>) ou a trilha sintetizada
+  function playMusic() {
+    if (muted) return;
+    if (current?.synth) {
+      music.pause();
+      synth.start();
+    } else {
+      synth.stop();
+      music.play().catch(() => {});
+    }
   }
   loadTrack();
   const sea = new Audio('assets/audio/sea.m4a');
@@ -51,6 +66,7 @@ export function createAudio() {
 
   let ctx = null;
   const ac = () => (ctx ??= new (window.AudioContext || window.webkitAudioContext)());
+  const synth = createSynthMusic(ac);
 
   function tone(freq, dur, { type = 'square', vol = 0.08, slide = 0, delay = 0 } = {}) {
     if (muted) return;
@@ -113,10 +129,10 @@ export function createAudio() {
 
   return {
     sfx,
-    startMusic() { play(music); },
+    startMusic() { if (!synth.playing && music.paused) playMusic(); },
     startGame() {
       if (trackId === 'aleatorio') { loadTrack(); music.currentTime = 0; }
-      play(music);
+      playMusic();
       play(sea);
     },
     get trackId() { return trackId; },
@@ -126,7 +142,7 @@ export function createAudio() {
       try { localStorage.setItem(TRACK_KEY, id); } catch {}
       loadTrack();
       music.currentTime = 0;
-      play(music);
+      playMusic();
     },
     stopGame() { sea.pause(); },
     get muted() { return muted; },
@@ -134,7 +150,9 @@ export function createAudio() {
       muted = !muted;
       try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch {}
       for (const a of [music, sea, siren, gas]) a.muted = muted;
-      if (!muted) play(music);
+      synth.setMuted(muted);
+      if (muted) synth.stop();
+      else playMusic();
       return muted;
     },
     init() { for (const a of [music, sea, siren, gas]) a.muted = muted; },

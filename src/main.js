@@ -331,9 +331,16 @@ async function ensureLatest() {
   }
 }
 
+// Instalável/offline: só na versão publicada (em dev o cache atrapalharia).
+function registerServiceWorker() {
+  if (!MY_VERSION || !('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
 async function boot() {
   if (await healStaleCache()) return;
   if (await ensureLatest()) return;
+  registerServiceWorker();
   fitStage();
   addEventListener('resize', fitStage);
   screen.orientation?.addEventListener?.('change', () => setTimeout(fitStage, 50));

@@ -13,7 +13,7 @@ const v = encodeURIComponent(version);
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
-for (const item of ['index.html', 'style.css', '.nojekyll', 'assets', 'src']) {
+for (const item of ['index.html', 'style.css', '.nojekyll', 'assets', 'src', 'manifest.webmanifest', 'sw.js']) {
   cpSync(item, join(out, item), { recursive: true });
 }
 
@@ -33,4 +33,6 @@ writeFileSync(
 );
 
 writeFileSync(join(out, 'version.json'), JSON.stringify({ v: version }) + '\n');
+const sw = join(out, 'sw.js');
+writeFileSync(sw, readFileSync(sw, 'utf8').replaceAll('__VERSION__', v));
 console.log(`site em ${out}/ com versão ${version}`);
