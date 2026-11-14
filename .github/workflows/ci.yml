@@ -1,0 +1,22 @@
+name: Testes
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main] # a main já roda os testes no deploy
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - name: Doc pública em dia
+        run: |
+          npm run docs
+          git diff --exit-code docs/JOGABILIDADE.md || (echo "::error::docs/JOGABILIDADE.md desatualizada: rode npm run docs" && exit 1)
+      - name: Build do site
+        run: npm run build

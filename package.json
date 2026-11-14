@@ -5,7 +5,14 @@
   "description": "Wavesson: o arrastão roguelike infinito no calçadão",
   "type": "module",
   "scripts": {
+    "start": "python3 -m http.server 5173",
     "test": "node --test \"test/*.test.js\"",
-    "start": "python3 -m http.server 5173"
+    "docs": "node tools/gen-docs.mjs",
+    "build": "node tools/stamp.mjs _site",
+    "analyze": "node tools/analyze.mjs",
+    "verify": "node tools/verify-run.mjs"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

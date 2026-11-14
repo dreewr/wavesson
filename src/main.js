@@ -390,7 +390,18 @@ async function boot() {
   requestAnimationFrame(frame);
 
   // ganchos para depuração no console
-  window.wavesson = { get run() { return run; }, startRun };
+  window.wavesson = {
+    get run() { return run; },
+    startRun,
+    // avança a simulação e desenha um quadro (útil com a aba em segundo plano, testes e capturas)
+    step(seconds = 1, cmd = { x: 0, y: 0 }) {
+      for (let i = 0; i < Math.round(seconds / TICK) && run && !run.over; i++) {
+        if (run.perkChoices) run.choosePerk(run.perkChoices[0]);
+        run.update(TICK, quantize(cmd));
+      }
+      renderer.draw(run, TICK, { best: bestScore, stick: input.stick });
+    },
+  };
 }
 
 boot().catch((err) => {

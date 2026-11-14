@@ -1,74 +1,129 @@
-# Wavesson 🌊
+<div align="center">
 
-**Wave + son**: a onda de gente, o arrastão no calçadão. Você controla o bonde inteiro de uma vez,
-descendo a praia de Copacabana → Ipanema → Leblon → Barra, pegando chinelo, celular e bolsa,
-recrutando a galera e fugindo de cachorro, salva-vidas, viatura e da onda.
+<img src="assets/img/logo.png" alt="Wavesson" width="640" />
 
-Feito numa hackathon em jan/2017 (Construct 2). Em 2026 virou um **roguelike infinito** em HTML5 puro.
+**O arrastão roguelike infinito no calçadão.**
+
+Você comanda o bando inteiro de uma vez, descendo a praia de Copacabana → Ipanema → Leblon → Barra,
+pegando chinelo, celular e bolsa, recrutando a galera e fugindo de cachorro, surfista, bombeiros, viatura e da onda.
+
+[![Jogar](https://img.shields.io/badge/jogar-dreewr.github.io%2Fwavesson-3a3d9b?style=for-the-badge)](https://dreewr.github.io/wavesson/)
+[![Deploy](https://github.com/dreewr/wavesson/actions/workflows/pages.yml/badge.svg)](https://github.com/dreewr/wavesson/actions/workflows/pages.yml)
+[![Testes](https://github.com/dreewr/wavesson/actions/workflows/ci.yml/badge.svg)](https://github.com/dreewr/wavesson/actions/workflows/ci.yml)
+
+<img src="docs/img/jogo-horizontal.jpg" alt="Wavesson no computador" width="72%" />
+<img src="docs/img/jogo-vertical.jpg" alt="Wavesson no celular em pé" width="22%" />
+
+</div>
+
+---
 
 ## Jogar
 
-**Online:** https://dreewr.github.io/wavesson/
+- **No navegador:** https://dreewr.github.io/wavesson/
+- **No celular:** abra o link e use *Adicionar à tela inicial* — vira app, abre em tela cheia e funciona offline.
+  Em pé ou deitado: cada orientação tem seu próprio enquadramento.
+- **Desafio do dia:** a mesma praia pra todo mundo naquele dia. `?seed=QUALQUERCOISA` fixa a praia que você quiser.
 
-Local:
+| Ação | Teclado | Celular |
+|---|---|---|
+| Mover o bando | WASD / setas | arrastar o dedo |
+| Pique | Espaço / Shift | botão PIQUE |
+| Pausa | P / Esc | botão II |
+| Som | M | — |
+| Vantagem | 1 2 3 | tocar no cartão |
+
+📖 **Tudo sobre inimigos, pontuação, vantagens e como a dificuldade sobe:** [`docs/JOGABILIDADE.md`](docs/JOGABILIDADE.md)
+(gerado a partir do código — sempre em dia).
+
+## O que tem
+
+- **Praia infinita** gerada por seed, com passagem sempre garantida entre obstáculos.
+- **Dificuldade que dá pra explicar:** curva por distância + **orçamento de ameaça** por fileira + **ritmo em serra**
+  (a tensão sobe ao longo de cada praia e alivia na **Hora do Arrastão**). Calibrada por simulação.
+- **Roguelike:** a cada trecho você escolhe 1 de 3 vantagens; bando grande e **combo** multiplicam pontos; **pique** com recarga.
+- **Elenco:** cachorro nervoso, salva-vidas, carro de picolé, castelo de areia (de 2017) + surfista desatento,
+  pelotão de bombeiros, viatura, onda, banhista que deixa o bando apaixonado (de 2026).
+- **Ranking à prova de trapaça:** a simulação anda em passo fixo e grava os comandos, então a partida pode ser
+  **refeita** do zero. O ranking local confere cada recorde; o online (opcional) confere no servidor.
+- **Telemetria e estatísticas:** onde e do que você morre, mediana, histograma — e um relatório que junta
+  dados de vários jogadores pra calibrar o jogo com gente de verdade.
+- **Trilha original** sintetizada na hora ("Samba do Arrastão") + as faixas da hackathon no seletor.
+
+## Rodar e mexer
+
+Sem build e sem dependências — só Node 22+ pros testes e ferramentas.
 
 ```bash
-npm start   # python3 -m http.server 5173
+npm start          # http://localhost:5173
+npm test           # 28 testes: determinismo, replay, passagem garantida, orçamento, doc em dia...
+npm run docs       # regera docs/JOGABILIDADE.md (obrigatório ao mexer em jogabilidade)
+npm run build      # monta _site/ com versão carimbada (o deploy faz isso sozinho)
+npm run analyze -- dados1.json dados2.json   # relatório de calibragem com exports dos jogadores
+npm run verify -- dados.json                 # refaz e confere partidas gravadas
 ```
 
-Abra http://localhost:5173. Sem build, sem dependências. `?seed=QUALQUERCOISA` fixa a praia.
+### Calibrando com jogadores reais
 
-**Controles:** WASD/setas ou arrastar na tela · `Espaço`/`Shift` pique · `P`/`Esc` pausa · `M` som · `1 2 3` escolhem vantagem.
-No celular aparecem os botões PIQUE e pausa. Com o celular em pé o jogo usa um layout vertical próprio (praia mais estreita e alta, calibrada pra ter a mesma dificuldade).
+1. Cada um joga normalmente e, na tela **ranking & estatísticas**, toca em *exportar meus dados*.
+2. Junte os arquivos e rode `npm run analyze -- *.json`: sai a mediana de distância, a taxa de morte precoce,
+   as causas de morte, os trechos onde mais se perde gente, as vantagens mais escolhidas e pistas automáticas
+   ("cachorro responde por 45% das perdas: pode estar forte ou mal sinalizado").
+3. Ajuste os números em `src/difficulty.js` / `src/layout.js`, rode `npm test` e `npm run docs`, e publique.
 
-## O que mudou em relação ao original
-
-| 2017 (hackathon) | 2026 |
-|---|---|
-| Mapa fixo de 52.000 px montado à mão | Praia infinita gerada por seed, fileira a fileira |
-| Cada regra copiada 6× (uma por integrante, `favelado_1..6`) | Uma lista `crew[]`; o bonde pode ter qualquer tamanho |
-| Dificuldade constante | Velocidade, densidade e perigos crescem com a distância (`src/difficulty.js`) |
-| Só cachorro e salva-vidas matavam (o Surfista Desatento estava nas instruções mas nunca foi feito) | + Surfista Desatento de verdade, banhista que deixa o bando apaixonado (o pique acorda), pelotão de bombeiros subindo a praia (com aviso na borda de baixo), viatura com aviso e sirene, onda que avança sobre a areia, salva-vidas que perseguem |
-| Pontos só por item | Multiplicador pelo tamanho do bando, **combo** de itens seguidos e vantagens roguelike a cada trecho |
-| Só dava pra andar | **Pique**: arrancada curta com recarga e um respiro de invulnerabilidade |
-| — | **Hora do Arrastão** a cada praia nova: fartura e pontos em dobro |
-| Integrante sumia sem aviso ao ficar pra trás | Alerta piscando e topo da tela avermelhado; bando pequeno atrai mais recrutas |
-| — | Recorde local, desafio do dia (seed por data), toque no celular |
-| Menu, instruções, créditos e HUD de texto no topo | Mesmo layout e sprites de 2017; HUD virou um bilhete manuscrito no mesmo lugar (Pontos / Wavessons / Distância) com carinhas do bando, onda até a próxima vantagem, combo, etiquetas das vantagens e medidor de pique |
-| Botão Options sem função, músicas importadas e nunca tocadas | Seletor de música no menu com as faixas da equipe; vinheta do gás na troca de praia |
-
-## Estrutura
+## Como o código é organizado
 
 ```
 src/
-  config.js      constantes do mundo (zonas da praia, tamanho do bando)
-  layout.js      enquadramentos: horizontal (1600x720, o de 2017) e vertical (720 x altura da tela)
-  screen.js      escolhe o layout pela orientação da tela
-  defs.js        catálogo de entidades: sprite, hitbox e papel (solid/deadly/slow/loot/recruit)
-  difficulty.js  curva de dificuldade (pura)
-  generator.js   geração procedural com passagem garantida (pura)
-  perks.js       vantagens roguelike
-  run.js         regras e estado de uma run (sem DOM, roda headless)
-  render.js      canvas
-  input.js, audio.js, assets.js, main.js
-test/            node --test: determinismo, curva, passagem garantida, simulação de runs
-legacy/          o projeto Construct 2 original, pra referência
+  run.js          regras e estado de uma partida — sem DOM, roda headless (testes e servidor)
+  difficulty.js   curva de dificuldade, custos de ameaça, ritmo em serra
+  generator.js    geração procedural das fileiras (pura, dirigida pelo orçamento)
+  layout.js       enquadramentos horizontal (1600x720, o de 2017) e vertical (celular em pé)
+  replay.js       passo fixo, gravação, replay e verificação de partidas
+  defs.js         entidades: tamanho, hitbox e papel (perigo, sólido, item...)
+  catalog.js      textos do bestiário (fonte da doc pública)
+  perks.js        vantagens roguelike
+  stats.js        estatísticas (jogo e ferramentas)
+  telemetry.js    registro local das partidas, ranking local, export
+  online.js       cliente do ranking online (opcional)
+  render.js       canvas: praia, personagens, HUD
+  audio.js        sons; synth-music.js é a trilha original
+  main.js         telas, loop, cola tudo
+tools/            stamp (build), gen-docs, analyze, verify-run
+test/             node --test
+docs/             JOGABILIDADE.md (gerada), RANKING-ONLINE.md, imagens
+supabase/         schema e função de verificação do ranking online
+legacy/           o projeto Construct 2 original de 2017
 ```
 
-```bash
-npm test
-```
+**Publicação:** todo push na `main` roda os testes, monta o site com a versão do commit carimbada em todos os
+arquivos e publica no GitHub Pages. O jogo confere a versão ao abrir e se atualiza sozinho — nada de cache velho.
 
-## Publicação
+## História
 
-Todo push na `main` dispara `.github/workflows/pages.yml`: roda os testes, monta o site com
-`tools/stamp.mjs` (carimba a versão do commit em todos os imports) e publica no GitHub Pages.
-O jogo confere `version.json` ao abrir e se atualiza sozinho se o navegador tiver uma versão velha em cache.
+Feito numa hackathon em janeiro de 2017 pela equipe **Wavesson02** — André Rodrigues, Henrique Hamilko,
+Eduardo Hamilko e Maria Augusta — no Construct 2: um mapa fixo, seis integrantes e cada regra copiada seis vezes.
+Em 2026 virou este roguelike, mantendo a arte, os menus e o HUD originais. O projeto de 2017 está em [`legacy/`](legacy/).
+
+| 2017 (hackathon) | Hoje |
+|---|---|
+| Mapa fixo de 52.000 px montado à mão | Praia infinita por seed, com passagem garantida |
+| Cada regra copiada 6× (uma por integrante) | Uma lista; o bando pode ter qualquer tamanho |
+| Dificuldade constante | Curva + orçamento de ameaça + serra, calibrados por simulação e telemetria |
+| Só cachorro e salva-vidas derrubavam; o Surfista Desatento só existia nas instruções | Surfista de verdade, bombeiros, viatura, onda, banhista |
+| Botão Options sem função, músicas importadas e nunca tocadas | Seletor de música funcionando + trilha original |
+| Só no computador | Celular em pé e deitado, instalável, offline |
+
+## Pendências conhecidas
+
+- **Arte unificada:** os sprites de 2017 convivem com personagens desenhados em código (bombeiros, banhista, viatura, surfista).
+- **Tema:** "arrastão" nasceu como piada de hackathon; um lançamento aberto (lojas, divulgação) pede decidir se mantém ou reenquadra.
+- **Ranking online:** pronto, mas desligado — ver [`docs/RANKING-ONLINE.md`](docs/RANKING-ONLINE.md).
+- **Licença:** ainda não definida.
 
 ## Créditos
 
-Arte, sprites e trilha: equipe Wavesson02 (hackathon, 2017).
+Arte, sprites, menus e o tema do menu: equipe Wavesson02 (2017). "Samba do Arrastão" é original do remake.
 
-As faixas do seletor de música (Sweet Dreams, Naruto, A Grande Família e a vinheta do gás) pertencem
-aos seus autores. Estão aqui só pela memória afetiva da hackathon, num projeto pessoal e sem fins
-comerciais; se algum detentor pedir, elas saem.
+As faixas extras do seletor (Sweet Dreams, Naruto, A Grande Família e a vinheta do gás) pertencem aos seus autores
+e estão aqui só pela memória afetiva da hackathon, num projeto pessoal e sem fins comerciais; se algum detentor pedir, elas saem.
