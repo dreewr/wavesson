@@ -6,6 +6,7 @@ import { createRenderer } from './render.js';
 import { createInput } from './input.js';
 import { createAudio, TRACKS } from './audio.js';
 import { randomSeed } from './rng.js';
+import { TICK, quantize, createRecorder } from './replay.js';
 import { applyOrientation, stageSize, layoutForScreen, tryFullscreen } from './screen.js';
 
 const $ = (id) => document.getElementById(id);
@@ -27,6 +28,7 @@ let renderer, input, audio;
 let paused = false;
 let bestScore = 0;
 let lastLove = 0;
+let recorder = null; // grava os comandos da run atual (replay/ranking)
 
 // Telas do menu (.screen) vivem no palco de 1600x720; janelas do jogo (.overlay) ficam por cima do canvas.
 function show(id) {
@@ -100,7 +102,9 @@ function onEvent(name, data) {
 
 function startRun(seed = randomSeed()) {
   document.activeElement?.blur?.();
-  run = new Run({ seed, onEvent, layout: layoutForScreen() });
+  const layout = layoutForScreen();
+  run = new Run({ seed, onEvent, layout });
+  recorder = createRecorder({ seed, layout, version: MY_VERSION });
   paused = false;
   audio.startGame();
   show(null);
@@ -122,6 +126,7 @@ function openPerks(choices) {
 }
 
 function pickPerk(p) {
+  recorder?.perk(p.id);
   run.choosePerk(p);
   show(null);
 }
@@ -270,12 +275,26 @@ async function boot() {
   if (params.has('seed')) startRun(params.get('seed'));
   else show('menu');
 
+  // passo fixo: a simulação sempre anda de 1/60 s em 1/60 s (replay determinístico)
   let last = performance.now();
+  let acc = 0;
+  let pendingDash = false;
   const frame = (now) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     if (run) {
-      if (screen === 'game' && !paused) run.update(dt, input.read());
+      if (screen === 'game' && !paused) {
+        acc = Math.min(acc + dt, 0.25);
+        const raw = input.read();
+        if (raw.dash) pendingDash = true; // guarda o pique até o próximo tick
+        while (acc >= TICK && screen === 'game' && !run.over && !run.perkChoices) {
+          const cmd = quantize({ ...raw, dash: pendingDash });
+          pendingDash = false;
+          recorder?.tick(cmd);
+          run.update(TICK, cmd);
+          acc -= TICK;
+        }
+      } else acc = 0;
       renderer.draw(run, screen === 'game' && !paused ? dt : 0, { best: bestScore, stick: input.stick });
     }
     requestAnimationFrame(frame);

@@ -334,3 +334,35 @@ test('banhista: quem passa perto se apaixona, o pique desperta e ficar pra trás
   assert.equal(run.deaths.love, 1);
   assert.ok(other);
 });
+
+// ------------------------------------------------------------ replay
+import { createRecorder, replay, verify, quantize, TICK } from '../src/replay.js';
+
+function playRecorded(seed, layout, seconds, policy) {
+  const run = new Run({ seed, layout });
+  const rec = createRecorder({ seed, layout });
+  for (let t = 0; t < seconds * 60 && !run.over; t++) {
+    if (run.perkChoices) { const p = run.perkChoices[t % run.perkChoices.length]; rec.perk(p.id); run.choosePerk(p); }
+    const cmd = quantize(policy(run, t));
+    rec.tick(cmd);
+    run.update(TICK, cmd);
+  }
+  return { run, rec: rec.finish(run) };
+}
+
+test('replay refaz a partida exatamente e o verificador confirma a pontuação', () => {
+  for (const kind of ['landscape', 'portrait']) {
+    const L = makeLayout(kind, 1400);
+    const policy = (r, t) => ({ x: Math.sin(t / 40), y: Math.cos(t / 90) * 0.4, dash: t % 300 === 0 });
+    const { run, rec } = playRecorded('REPLAY-' + kind, L, 900, policy);
+    assert.ok(run.over, 'a partida de teste deveria terminar');
+    const again = replay(rec);
+    assert.equal(again.score, run.score);
+    assert.equal(again.meters, run.meters);
+    assert.equal(verify(rec).ok, true);
+    // pontuação adulterada é pega
+    const fake = { ...rec, claimed: { ...rec.claimed, score: rec.claimed.score + 5000 } };
+    assert.equal(verify(fake).ok, false);
+    assert.ok(rec.frames.length < rec.claimed.ticks, 'gravação comprimida');
+  }
+});
