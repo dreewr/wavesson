@@ -45,13 +45,13 @@ export function placeSolids(rng, count, gapWidth, L = LANDSCAPE) {
 
 function lootLine(rng, y, x0, n, kind = 'flipflop') {
   const out = [];
-  for (let i = 0; i < n; i++) out.push({ kind, x: x0 + i * 55, y: y + 10 });
+  for (let i = 0; i < n; i++) out.push({ kind, x: x0 + i * 44, y: y + 10 });
   return out;
 }
 
 const PATTERNS = {
   solids(rng, y, diff, L) {
-    const count = rng.int(2, 3 + Math.min(3, diff.tier));
+    const count = rng.int(4, 4 + Math.min(4, diff.tier)); // obstáculos na escala real ocupam menos: mais deles por fileira
     const { gap, solids } = placeSolids(rng, count, diff.gapWidth, L);
     const out = solids.map((s) => ({ ...s, y: y - DEFS[s.kind].hit.oy }));
     // um mimo na passagem
@@ -153,9 +153,9 @@ const PATTERNS = {
     const n = diff.tier >= 4 && L.kind === 'landscape' && rng.chance(0.35) ? 2 : 1;
     const out = [];
     for (let i = 0; i < n; i++) {
-      const x = rng.range(L.zone.sandStart, L.zone.sandEnd - 160);
+      const x = rng.range(L.zone.sandStart, L.zone.sandEnd - 120);
       out.push({ kind: 'banhista', x, y: y + i * 150, look: rng.int(0, 5) });
-      if (rng.chance(0.6)) out.push({ kind: rng.chance(0.4) ? 'bag' : 'phone', x: x + rng.pick([-40, 175]), y: y + 10 + i * 150 });
+      if (rng.chance(0.6)) out.push({ kind: rng.chance(0.4) ? 'bag' : 'phone', x: x + rng.pick([-40, 130]), y: y + 10 + i * 150 });
     }
     return out;
   },
@@ -194,7 +194,7 @@ export function generateRow(rng, y, diff, opts = {}) {
   const pattern = rng.weighted(weights);
   const specs = PATTERNS[pattern](rng, y, diff, L);
   if (rng.chance(0.25)) {
-    specs.unshift({ kind: 'towel', x: rng.range(L.zone.sandStart, L.zone.sandEnd - 200), y: y + rng.range(-120, 120) });
+    specs.unshift({ kind: 'towel', x: rng.range(L.zone.sandStart, L.zone.sandEnd - 130), y: y + rng.range(-120, 120) });
   }
   return { pattern, specs, cost: PATTERN_COST[pattern] ?? 0 };
 }

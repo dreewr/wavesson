@@ -31,7 +31,7 @@ orçamento de ameaça da praia (ver *Como a dificuldade sobe*).
 
 | | Libera em | Custo | O que faz | Como lidar | Desde |
 |---|---|---|---|---|---|
-| **Cachorro Nervoso** | 0 m | 2 | Corre de um lado pro outro numa faixa da areia, cada vez mais rápido e mais largo. | Espere ele virar e passe atrás. O vaivém encolhe na praia estreita (celular em pé). | 2017 |
+| **Cachorro Nervoso (vira-lata caramelo)** | 0 m | 2 | Um caramelo de coleira vermelha que trota de um lado pro outro numa faixa da areia, cada vez mais rápido e mais largo. | Espere ele virar e passe atrás. O vaivém encolhe na praia estreita (celular em pé). | 2017 · redesenhado em 2026 |
 | **Salva-Vidas** | 150 m | 2,5 | Fica parado de guarda, às vezes com uma bolsa do lado de isca. Mais longe, passa a perseguir o bando devagar. | Dê a volta larga. Quando ele começar a perseguir, não pare perto. | 2017 |
 | **Surfista Desatento** | 150 m | 2,5 | Sai do mar, para um instante ajeitando a prancha ("!" vermelho) e atravessa a praia inteira sem olhar, passando por cima de tudo. | Ao ver o "!", saia da linha dele. Mais longe ele vem em zigue-zague e em dupla. | 2017 (no papel) · 2026 (no jogo) |
 | **Pelotão de Bombeiros** | 150 m | 4 | Bombeiros guarda-vidas de sunga sobem a praia correndo, de baixo pra cima: em coluna, em "V" ou num paredão com um buraco. | O aviso na borda de baixo pinta exatamente as faixas por onde eles vão passar — o buraco do paredão fica limpo. Passar sem perder ninguém dá bônus ("passou liso!"). | 2026 |
@@ -110,16 +110,16 @@ Três mecanismos trabalham juntos:
 
 | Metros | Rolagem (px/s) | Fileiras a cada (px) | Passagem mín. (px) | Ameaça/fileira | Intensidade | Aviso viatura | Aviso bombeiros | Onda a cada |
 |---|---|---|---|---|---|---|---|---|
-| 0 | 170 | 300 | 260 | 0,88 | 0,8× | 1,6 s | 2 s | — |
-| 150 | 196 | 287 | 252 | 1,25 | 0,97× | 1,53 s | 1,92 s | — |
-| 300 | 222 | 274 | 243 | 1,68 | 1,14× | 1,46 s | 1,84 s | — |
-| 450 | 248 | 261 | 235 | 1,43 | 0,86× | 1,39 s | 1,76 s | 26 s |
-| 600 | 274 | 248 | 226 | 1,91 | 1,03× | 1,32 s | 1,68 s | 24 s |
-| 900 | 326 | 222 | 209 | 2,04 | 0,91× | 1,18 s | 1,52 s | 20 s |
-| 1.200 | 378 | 196 | 192 | 2,1 | 0,8× | 1,04 s | 1,36 s | 16 s |
-| 1.500 | 430 | 170 | 175 | 3,41 | 1,14× | 0,9 s | 1,2 s | 12 s |
-| 2.000 | 450 | 165 | 175 | 2,56 | 0,8× | 0,9 s | 1,2 s | 9 s |
-| 3.000 | 490 | 155 | 175 | 3,69 | 1,03× | 0,9 s | 1,2 s | 9 s |
+| 0 | 170 | 300 | 260 | 1,01 | 0,8× | 1,6 s | 2 s | — |
+| 150 | 196 | 287 | 252 | 1,44 | 0,97× | 1,53 s | 1,92 s | — |
+| 300 | 222 | 274 | 243 | 1,94 | 1,14× | 1,46 s | 1,84 s | — |
+| 450 | 248 | 261 | 235 | 1,64 | 0,86× | 1,39 s | 1,76 s | 26 s |
+| 600 | 274 | 248 | 226 | 2,19 | 1,03× | 1,32 s | 1,68 s | 24 s |
+| 900 | 326 | 222 | 209 | 2,35 | 0,91× | 1,18 s | 1,52 s | 20 s |
+| 1.200 | 378 | 196 | 192 | 2,41 | 0,8× | 1,04 s | 1,36 s | 16 s |
+| 1.500 | 430 | 170 | 175 | 3,92 | 1,14× | 0,9 s | 1,2 s | 12 s |
+| 2.000 | 450 | 165 | 175 | 2,94 | 0,8× | 0,9 s | 1,2 s | 9 s |
+| 3.000 | 490 | 155 | 175 | 4,24 | 1,03× | 0,9 s | 1,2 s | 9 s |
 
 **Custo de cada tipo de fileira:**
 
@@ -139,7 +139,7 @@ Pra compensar, os números abaixo foram calibrados por simulação (bot jogando 
 | Mundo visível | 1600×720 | 720×altura da tela (~1560) |
 | Areia jogável | 1050 px | 420 px |
 | Velocidade da praia | 1× | 1,3× |
-| Espaçamento das fileiras | 1× | 1,15× |
+| Espaçamento das fileiras | 1× | 0,9× |
 | Orçamento de ameaça | 1× | 2,4× |
 | Alcance da onda | 1× | 0,42× |
 

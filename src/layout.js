@@ -22,7 +22,7 @@ export function makeLayout(kind = 'landscape', height) {
       laneMax: zone.shallow - 24,
       tideScale: 0.42, // a onda avança proporcional à largura da areia
       speedMult: 1.3, // mais visão à frente → praia um pouco mais rápida
-      rowGapMult: 1.15, // praia estreita: fileiras mais espaçadas pra não entupir
+      rowGapMult: 0.9, // praia estreita, obstáculos em escala real: fileiras um pouco mais juntas
       threatMult: 2.4, // orçamento de ameaça por fileira (calibrado por simulação)
       start: { x: 250, y: 300 },
     };

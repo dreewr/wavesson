@@ -12,8 +12,8 @@ export const CATEGORIES = [
 
 export const CATALOG = [
   // ---------------------------------------------------------------- perigos
-  { id: 'dog', cat: 'deadly', name: 'Cachorro Nervoso', since: 2017, pattern: 'dog',
-    does: 'Corre de um lado pro outro numa faixa da areia, cada vez mais rápido e mais largo.',
+  { id: 'dog', cat: 'deadly', name: 'Cachorro Nervoso (vira-lata caramelo)', since: '2017 · redesenhado em 2026', pattern: 'dog',
+    does: 'Um caramelo de coleira vermelha que trota de um lado pro outro numa faixa da areia, cada vez mais rápido e mais largo.',
     counter: 'Espere ele virar e passe atrás. O vaivém encolhe na praia estreita (celular em pé).' },
   { id: 'lifeguard', cat: 'deadly', name: 'Salva-Vidas', since: 2017, pattern: 'lifeguard',
     does: 'Fica parado de guarda, às vezes com uma bolsa do lado de isca. Mais longe, passa a perseguir o bando devagar.',

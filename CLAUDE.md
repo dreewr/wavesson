@@ -41,6 +41,7 @@ _Last updated: 2026-11-14_
 | Músicas de terceiros só por memória afetiva, repo pessoal | Pra lançamento público/comercial precisam sair; a trilha original sintetizada é a substituta |
 | Commits com e-mail noreply do GitHub | Repo é público |
 | Arte: tudo do mundo passa por `src/pixel.js` (pixel 2×, contorno, paleta) via cache de sprites em `render.js`; UI fica nítida | Unificar 2017 + novos sem redesenhar à mão, a custo ~0 por quadro |
+| Escala: integrante = 100 unidades ≈ 1,75 m; tamanhos em `src/defs.js` seguem essa régua | Pedido de redesign "tudo em escala" |
 | Beta publicada em dreewr.github.io/wavesson-beta (repo dreewr/wavesson-beta ← `git push beta feat/jogo-real:main`) | Testar a versão nova sem mexer na main |
 | Caricatura racial do menu de 2017 e sprite com escudo do Corinthians fora do jogo | Estereótipo / marca registrada |
 

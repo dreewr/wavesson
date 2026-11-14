@@ -48,6 +48,7 @@ pegando chinelo, celular e bolsa, recrutando a galera e fugindo de cachorro, sur
   **refeita** do zero. O ranking local confere cada recorde; o online (opcional) confere no servidor.
 - **Telemetria e estatísticas:** onde e do que você morre, mediana, histograma — e um relatório que junta
   dados de vários jogadores pra calibrar o jogo com gente de verdade.
+- **Tudo em escala** (o integrante é a régua: 100 ≈ 1,75 m), com um **vira-lata caramelo** novo e mar redesenhado.
 - **Arte unificada em pixel art:** sprites de 2017, objetos vetoriais e personagens novos passam pela mesma
   conversão (pixel 2×, contorno de 1 pixel, paleta de praia com pontilhado), feita uma vez e guardada em cache —
   o quadro custa menos de 1 ms. A interface fica em papel manuscrito, nítida, de propósito.

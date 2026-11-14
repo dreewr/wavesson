@@ -14,12 +14,12 @@ import { viewport } from './screen.js';
 import { PERKS as PERK_LIST } from './perks.js';
 import { RUSH } from './run.js';
 import { PIXEL, outline, quantize } from './pixel.js';
+import { DOG_COLORS, DOG_W, DOG_H, dogFrame } from './dog-art.js';
 
 const DEEP_BLUE = '#10298f';
 const TOUCH = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-// a água começa ~740px pra dentro do sprite do mar (1024px); no layout original ele ficava em x=610
-const SEA_EDGE_IN_SPRITE = 740;
 const snap = (v) => Math.round(v / PIXEL) * PIXEL;
+const WALK_TILE_W = 250; // escala fixa do desenho do calçadão
 
 // Onde fica cada peça da HUD em cada enquadramento. O bilhete é desenhado nas
 // coordenadas do layout horizontal e só transladado/escalado pro vertical.
@@ -163,25 +163,24 @@ export function createRenderer(canvas, images) {
       ctx.fillRect(snap(edge - 120 + i * 20), 0, 20, VIEW_H);
     }
 
-    // calçadão (tile vertical)
+    // calçadão: o desenho de 2017 sempre na mesma escala (250 de largura);
+    // no celular em pé aparece só a faixa que cabe, sem encolher o padrão
     const walkImg = images[run.biome.walk];
-    const tileH = snap((walkImg.height * ZONE.walkEnd) / walkImg.width);
-    const walk = sprite(run.biome.walk, ZONE.walkEnd, tileH, { withOutline: false });
-    for (let y = -snap(cam % tileH); y < VIEW_H; y += tileH) put(walk, 0, y);
+    const tileH = snap((walkImg.height * WALK_TILE_W) / walkImg.width);
+    const walk = sprite(run.biome.walk, WALK_TILE_W, tileH, { withOutline: false });
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, ZONE.walkEnd, VIEW_H);
+    ctx.clip();
+    for (let y = -snap(cam % tileH); y < VIEW_H; y += tileH) put(walk, ZONE.walkEnd - WALK_TILE_W, y);
+    ctx.restore();
     // meio-fio do calçadão + sombra na areia
     ctx.fillStyle = '#d8d2c2';
     ctx.fillRect(snap(ZONE.walkEnd - 2), 0, PIXEL * 3, VIEW_H);
     ctx.fillStyle = 'rgba(0,0,0,0.22)';
     ctx.fillRect(snap(ZONE.walkEnd + 4), 0, PIXEL * 3, VIEW_H);
 
-    // mar animado; a onda empurra tudo pra esquerda
-    const seaX = ZONE.shallow - SEA_EDGE_IN_SPRITE + run.tide.offset;
-    const sea = sprite(`sea_${Math.floor(run.time * 5) % 6}`, 1024, 1024, { withOutline: false });
-    for (let y = -snap(cam % 1024); y < VIEW_H; y += 1024) put(sea, seaX, y);
-    if (seaX + 1024 < VIEW_W) {
-      ctx.fillStyle = DEEP_BLUE;
-      ctx.fillRect(snap(seaX + 1024), 0, VIEW_W, VIEW_H);
-    }
+    drawSea(run);
 
     if (run.tide.phase === 'warn' && Math.floor(run.time * 6) % 2 === 0) {
       later(() => {
@@ -189,6 +188,50 @@ export function createRenderer(canvas, images) {
         ctx.fillRect(ZONE.shallow - run.tide.reach, 0, run.tide.reach, VIEW_H);
         label('ONDA VINDO!', ZONE.shallow - run.tide.reach / 2, 90, '#fff', 44, '#10298f');
       });
+    }
+  }
+
+  // Mar em pixel art: espuma ondulando na beira, água rasa clara e — exatamente
+  // onde a correnteza passa a levar — a água escura, com uma linha marcando.
+  // Desenhado em faixas de 2 pixels presas ao mundo (o mar rola junto com a praia).
+  function drawSea(run) {
+    const cam = run.cameraY, t = run.time;
+    const shore = ZONE.shallow + run.tide.offset;
+    const deep = ZONE.deep + run.tide.offset;
+    const RH = PIXEL * 2;
+    const first = Math.floor(cam / RH);
+    const last = Math.ceil((cam + VIEW_H) / RH);
+    for (let row = first; row <= last; row++) {
+      const y = snap(row * RH - cam);
+      const wy = row * RH;
+      const RHO = RH + 1; // sobrepõe as faixas um pouco: sem emendas finas entre elas
+      const wave = Math.sin(wy * 0.03 + t * 2.4) * 7 + Math.sin(wy * 0.011 - t * 1.3) * 5;
+      const edge = snap(shore + wave);
+      const dEdge = snap(deep + Math.sin(wy * 0.02 + t * 1.2) * 5);
+      const foam = PIXEL * (3 + (Math.sin(wy * 0.07 + t * 3) > 0.5 ? 2 : 0));
+      // areia encharcada logo antes da espuma
+      ctx.fillStyle = '#c49a45';
+      ctx.fillRect(edge - PIXEL * 3, y, PIXEL * 3, RHO);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(edge, y, foam, RHO);
+      ctx.fillStyle = '#6fa8ff';
+      ctx.fillRect(edge + foam, y, Math.max(0, dEdge - edge - foam), RHO);
+      ctx.fillStyle = '#3a6fd8';
+      ctx.fillRect(dEdge, y, PIXEL * 3, RHO);
+      ctx.fillStyle = '#1738bd';
+      ctx.fillRect(dEdge + PIXEL * 3, y, 90, RHO);
+      ctx.fillStyle = DEEP_BLUE;
+      ctx.fillRect(dEdge + PIXEL * 3 + 90, y, VIEW_W, RHO);
+      // espuminhas e brilhos que correm na água
+      const h = (row * 2654435761 + Math.floor(t * 3)) >>> 0;
+      if (h % 23 === 0) {
+        ctx.fillStyle = '#c8e4ff';
+        ctx.fillRect(snap(edge + foam + ((h >>> 5) % 60)), y, PIXEL * 4, PIXEL);
+      }
+      if (h % 31 === 0) {
+        ctx.fillStyle = '#3a6fd8';
+        ctx.fillRect(snap(dEdge + 20 + ((h >>> 7) % 200)), y, PIXEL * 6, PIXEL);
+      }
     }
   }
 
@@ -207,9 +250,22 @@ export function createRenderer(canvas, images) {
     const sy = e.y - run.cameraY;
     groundShadow(e, sy);
     switch (e.kind) {
-      case 'dog':
-        put(sprite(anim('dog', e.t, 8), e.w, e.h), e.x, sy, { flip: e.flip });
+      case 'dog': {
+        // vira-lata caramelo: trote (patas) e rabo abanando em ritmos diferentes
+        const legs = Math.floor(e.t * 10) % 2, tail = Math.floor(e.t * 7) % 2;
+        const art = bake(`dog:${legs}:${tail}`, DOG_W * PIXEL, DOG_H * PIXEL, (g) => {
+          dogFrame(legs, tail).forEach((row, y) => {
+            for (let x = 0; x < row.length; x++) {
+              const col = DOG_COLORS[row[x]];
+              if (!col) continue;
+              g.fillStyle = col;
+              g.fillRect(x * PIXEL, y * PIXEL, PIXEL, PIXEL);
+            }
+          });
+        });
+        put(art, e.x, sy, { flip: e.flip });
         return;
+      }
       case 'vendor':
         put(sprite(anim('vendor', e.t, 5), e.w, e.h), e.x, sy);
         return;
@@ -267,10 +323,11 @@ export function createRenderer(canvas, images) {
     const skin = CREW_SKINS[e.skin % CREW_SKINS.length];
     const running = e.state === 'run';
     const bob = e.state === 'emerge' ? Math.round(Math.sin(e.t * 14)) * PIXEL : 0;
-    const px = e.x + 58, py = sy + bob;
-    pixelEllipse(e.x + e.w / 2, sy + e.h - 4, 70, 8, 'rgba(210,25,25,0.32)');
+    const px = e.x + e.w / 2 - CREW.w / 2 + 6, py = sy + bob;
+    pixelEllipse(e.x + e.w / 2, sy + e.h - 4, e.w * 0.48, 8, 'rgba(210,25,25,0.32)');
     put(sprite(`${skin}_${running ? Math.floor(e.t * 12) % 2 : 0}`, CREW.w, CREW.h), px, py);
-    const board = bake(`board:${e.skin % BOARD_COLORS.length}`, 150, 26, (g) => {
+    const board = bake(`board:${e.skin % BOARD_COLORS.length}:${e.w}`, e.w, 26, (g) => {
+      g.scale(e.w / 150, 1);
       g.fillStyle = '#fff';
       g.beginPath();
       g.moveTo(4, 12);
@@ -287,7 +344,7 @@ export function createRenderer(canvas, images) {
 
     if (e.state === 'emerge') {
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
-      ctx.fillRect(snap(e.x + 40), snap(sy + e.h - 10), 70, PIXEL * 3);
+      ctx.fillRect(snap(e.x + e.w * 0.25), snap(sy + e.h - 10), e.w * 0.5, PIXEL * 3);
       later(() => label('!', px + 17, py - 12, '#e53935', 36));
     } else if (running && Math.floor(e.t * 10) % 2 === 0) {
       // respingos de areia
@@ -370,9 +427,10 @@ export function createRenderer(canvas, images) {
     }
 
     ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    ctx.fillRect(snap(e.x + 4), snap(sy + 22), e.w, 44);
+    ctx.fillRect(snap(e.x + 4), snap(sy + e.h * 0.34), e.w, e.h * 0.7);
     const kick = Math.sin(e.t * 4) > 0 ? 1 : 0;
-    const art = bake(`banhista:${k}:${kick}`, 150, 64, (g) => {
+    const art = bake(`banhista:${k}:${kick}`, e.w, e.h, (g) => {
+      g.scale(e.w / 150, e.h / 64); // desenho original em 150x64, reduzido pra escala
       const skin = SKIN[(k + 1) % SKIN.length];
       const [t1, t2] = TOWEL[k % TOWEL.length];
       const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
@@ -397,7 +455,7 @@ export function createRenderer(canvas, images) {
       }
     });
     put(art, e.x, sy);
-    if (e.charmed) heart(e.x + 70, sy + 8 + Math.round(Math.sin(e.t * 5)) * PIXEL * 2, 7);
+    if (e.charmed) heart(e.x + e.w * 0.47, sy + 4 + Math.round(Math.sin(e.t * 5)) * PIXEL * 2, 7);
   }
 
   function drawPolice(run, e, sy) {
@@ -779,11 +837,9 @@ export function createRenderer(canvas, images) {
 
   // prepara os sprites grandes/comuns antes do jogo (evita engasgo na 1ª aparição)
   function warm(layout) {
-    const z = layout.zone;
-    for (let i = 0; i < 6; i++) sprite(`sea_${i}`, 1024, 1024, { withOutline: false });
-    for (const walk of ['walk_copacabana', 'walk_ipanema']) {
+        for (const walk of ['walk_copacabana', 'walk_ipanema']) {
       const img = images[walk];
-      sprite(walk, z.walkEnd, snap((img.height * z.walkEnd) / img.width), { withOutline: false });
+      sprite(walk, WALK_TILE_W, snap((img.height * WALK_TILE_W) / img.width), { withOutline: false });
     }
     for (const s of CREW_SKINS) for (const f of [0, 1]) sprite(`${s}_${f}`, CREW.w, CREW.h);
   }

@@ -42,7 +42,7 @@ export function difficultyAt(meters) {
     tier,
     intensity,
     // orçamento de ameaça ganho a cada fileira (gasto pelos padrões; ver PATTERN_COST)
-    threatPerRow: (lerp(1.1, 3.0, ramp) + late * 0.4) * intensity,
+    threatPerRow: 1.15 * (lerp(1.1, 3.0, ramp) + late * 0.4) * intensity,
     threatCap: lerp(4, 9, ramp) + late,
     scrollSpeed: Math.min(560, lerp(170, 430, ramp) + late * 40),
     // distância vertical entre "fileiras" de conteúdo

@@ -12,6 +12,10 @@
 - **Doc pública** `docs/JOGABILIDADE.md` gerada do código + teste/CI que barra doc desatualizada.
 - **Arte unificada em pixel art** (jogo e menu): mesma grade de pixel, contorno e paleta pra tudo; sprites convertidos uma vez e guardados em cache (quadro de 7,9 ms → 0,5 ms).
 - **Botão de som** no menu, na pausa e em OPTIONS (além da tecla M).
+- **Redesign em escala:** tudo dimensionado pela altura do integrante (100 ≈ 1,75 m) — itens, castelo, guarda-sol, toalha, banhista e prancha em proporção real (itens com área de coleta generosa).
+- **Vira-lata caramelo** novo em pixel art (trote em 4 quadros, rabo abanando, coleira e língua) no lugar do cachorro de 2017.
+- **Mar em pixel art** com espuma ondulando e a água escura começando exatamente onde a correnteza leva; calçadão na mesma escala nos dois layouts.
+- Dificuldade recalibrada por simulação pros obstáculos menores (mais obstáculos por fileira, +15% de ameaça).
 
 ## 2026-11-14
 
