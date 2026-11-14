@@ -22,13 +22,18 @@ export const COMBO = { window: 2.2, step: 0.1, max: 3 };
 export const RUSH = { seconds: 9, lootMult: 2 };
 // Margem (px) do topo da tela em que o integrante já está em perigo.
 export const DANGER_MARGIN = 70;
+// Ajuda pra quem está começando: rolagem mais lenta até tantos metros.
+export const ASSIST = { meters: 150, scroll: 0.82 };
 // Banhista: quanto tempo o integrante fica apaixonado e quanto controle sobra.
 export const LOVE = { seconds: 2.6, control: 0.25, pull: 150, scroll: 0.82, cooldown: 3 };
 
 export class Run {
-  constructor({ seed, onEvent = () => {}, layout = LANDSCAPE }) {
+  constructor({ seed, onEvent = () => {}, layout = LANDSCAPE, assist = false }) {
     this.seed = seed;
     this.layout = layout;
+    // ajuda pra iniciante: praia mais lenta nos primeiros metros (vem da telemetria)
+    this.assist = assist;
+    this.deathLog = []; // { cause, m, t } de cada integrante perdido
     this.rng = createRng(seed);
     this.emit = onEvent;
     this.time = 0;
@@ -134,7 +139,7 @@ export class Run {
     const before = this.meters;
     const diff = (this.diff = difficultyAt(before));
 
-    this.scroll = diff.scrollSpeed * this.layout.speedMult;
+    this.scroll = diff.scrollSpeed * this.layout.speedMult * (this.assist && before < ASSIST.meters ? ASSIST.scroll : 1);
     this.cameraY += this.scroll * dt;
     this.score += (this.meters - before) * this.mods.scoreMult;
 
@@ -515,6 +520,7 @@ export class Run {
     if (i < 0) return false;
     this.crew.splice(i, 1);
     this.deaths[cause] = (this.deaths[cause] || 0) + 1;
+    this.deathLog.push({ cause, m: Math.floor(this.meters), t: Math.round(this.time * 10) / 10 });
     this.emit('death', { cause, x: m.x, y: m.y });
     return true;
   }

@@ -6,7 +6,6 @@
 // partida e confere a pontuação), reproduzir bugs e analisar como as pessoas jogam.
 
 import { Run } from './run.js';
-import { PERKS } from './perks.js';
 import { makeLayout } from './layout.js';
 
 export const TICK = 1 / 60;
@@ -19,7 +18,7 @@ export function quantize(input) {
 }
 
 // Grava os comandos de cada tick em "corridas" iguais: [quantos, x, y, pique].
-export function createRecorder({ seed, layout, version = null }) {
+export function createRecorder({ seed, layout, version = null, assist = false }) {
   const frames = [];
   const perks = [];
   let ticks = 0;
@@ -42,6 +41,7 @@ export function createRecorder({ seed, layout, version = null }) {
         format: REPLAY_FORMAT,
         version,
         seed,
+        assist,
         layout: { kind: layout.kind, h: layout.h },
         frames,
         perks,
@@ -54,15 +54,16 @@ export function createRecorder({ seed, layout, version = null }) {
 // Refaz a partida a partir da gravação. Devolve a Run no estado final.
 export function replay(rec, { onEvent } = {}) {
   const layout = makeLayout(rec.layout.kind, rec.layout.h);
-  const run = new Run({ seed: rec.seed, layout, onEvent });
+  const run = new Run({ seed: rec.seed, layout, onEvent, assist: !!rec.assist });
   let perkIdx = 0;
   for (const [count, qx, qy, d] of rec.frames) {
     for (let i = 0; i < count; i++) {
       if (run.over) return run;
       if (run.perkChoices) {
         const id = rec.perks[perkIdx++];
-        const perk = run.perkChoices.find((p) => p.id === id) || PERKS.find((p) => p.id === id);
-        if (!perk) throw new Error(`vantagem inválida no replay: ${id}`);
+        // só vale escolher entre as 3 oferecidas (senão era trapaça)
+        const perk = run.perkChoices.find((p) => p.id === id);
+        if (!perk) throw new Error(`vantagem fora das opções no replay: ${id}`);
         run.choosePerk(perk);
       }
       run.update(TICK, { x: qx / Q, y: qy / Q, dash: d === 1 && i === 0 });

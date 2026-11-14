@@ -31,6 +31,7 @@
         <img src="assets/ui/btn_start.png" alt="Start" />
       </button>
       <button class="link" data-action="daily" style="--x:559px;--y:311px;--px:360px;--py:535px">desafio do dia</button>
+      <button class="link" data-action="stats" style="--x:559px;--y:452px;--px:360px;--py:930px">ranking &amp; estatísticas</button>
       <button class="spr" data-action="music" style="--x:555px;--y:377px;--w:441px;--h:85px;--px:360px;--py:612px;--pw:397px;--ph:77px">
         <img src="assets/ui/btn_options.png" alt="Options" />
       </button>
@@ -100,6 +101,26 @@
       <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px;--px:160px;--py:calc(var(--sh) - 85px);--pw:245px;--ph:66px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
     </section>
 
+    <section id="stats" class="screen beach">
+      <div class="stats-wrap hand">
+        <div class="col">
+          <h2>RANKING</h2>
+          <div class="tabs" id="rankTabs" hidden>
+            <button class="tab on" data-rank="local">meu</button>
+            <button class="tab" data-rank="online">online</button>
+          </div>
+          <ol class="rank" id="rankList"></ol>
+        </div>
+        <div class="col">
+          <h2>ESTATÍSTICAS</h2>
+          <div id="statsBody"></div>
+          <button class="link inline" data-action="export">exportar meus dados (.json)</button>
+        </div>
+      </div>
+      <div class="menu-sea"></div>
+      <button class="spr" data-action="back" style="--x:182px;--y:671px;--w:306px;--h:82px;--px:160px;--py:calc(var(--sh) - 85px);--pw:245px;--ph:66px"><img src="assets/ui/btn_menu.png" alt="Menu" /></button>
+    </section>
+
     <section id="music" class="screen beach">
       <img class="sprite" src="assets/ui/btn_options.png" alt="Options" style="--x:300px;--y:200px;--w:441px;--h:85px;--px:360px;--py:240px;--pw:397px;--ph:77px" />
       <div class="tracks hand" id="trackList"></div>
@@ -134,6 +155,10 @@
     <div class="paper">
       <h2>O bando rodou!</h2>
       <div id="summary"></div>
+      <div id="onlineSubmit" class="online-submit" hidden>
+        <input id="nick" maxlength="16" placeholder="seu apelido" autocomplete="nickname" />
+        <button class="ink" id="sendOnline">mandar pro ranking online</button>
+      </div>
       <button data-action="again" class="ink primary">mais uma (Enter)</button>
       <button data-action="quit" class="ink">menu</button>
     </div>

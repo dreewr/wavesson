@@ -401,3 +401,24 @@ test('mais longe na praia, mais ameaça de fato gerada', () => {
   };
   assert.ok(count(1500) > count(0) * 1.5, `${count(0)} → ${count(1500)}`);
 });
+
+test('replay recusa vantagem que não estava entre as oferecidas', () => {
+  const L = makeLayout('landscape');
+  const { rec } = playRecorded('PERK-CHEAT', L, 600, (r, t) => ({ x: Math.sin(t / 30), y: 0.2 }));
+  if (!rec.perks.length) return; // seed sem vantagem: nada a testar
+  const all = ['pe', 'ima', 'cintura', 'galera', 'mao', 'chinelo', 'petisco', 'surfista', 'folego', 'olheiro'];
+  const cheat = { ...rec, perks: rec.perks.map(() => all.find((id) => !rec.perks.includes(id))) };
+  assert.equal(verify(cheat).ok, false);
+});
+
+test('estatísticas: mediana, causas e ajuda pra iniciante', async () => {
+  const { summarize, needsAssist } = await import('../src/stats.js');
+  const runs = [10, 40, 50, 300, 900].map((m, i) => ({ meters: m, layout: i % 2 ? 'portrait' : 'landscape', deathLog: [{ cause: 'dog', m: m - 5 }, { cause: 'left', m }] }));
+  const s = summarize(runs);
+  assert.equal(s.median, 50);
+  assert.equal(s.best, 900);
+  assert.equal(s.causes[0].n, 5);
+  assert.equal(s.earlyRate, 0.6);
+  assert.ok(needsAssist(runs.slice(0, 3)));
+  assert.ok(!needsAssist(runs.slice(2)));
+});

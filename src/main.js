@@ -7,6 +7,9 @@ import { createInput } from './input.js';
 import { createAudio, TRACKS } from './audio.js';
 import { randomSeed } from './rng.js';
 import { TICK, quantize, createRecorder } from './replay.js';
+import { CAUSE_NAMES, summarize, needsAssist } from './stats.js';
+import { summaryOf, recordRun, allRuns, topRuns, maybeAddTop, markVerified, exportJson } from './telemetry.js';
+import { onlineEnabled, submitRun, fetchTop } from './online.js';
 import { applyOrientation, stageSize, layoutForScreen, tryFullscreen } from './screen.js';
 
 const $ = (id) => document.getElementById(id);
@@ -20,7 +23,7 @@ const store = {
   set(v) { try { localStorage.setItem(BEST_KEY, JSON.stringify(v)); } catch {} },
 };
 
-const CAUSES = { left: 'Ficou pra trás', dog: 'Cachorro', lifeguard: 'Salva-vidas', surfer: 'Surfista desatento', bombeiro: 'Bombeiros', love: 'Ficou apaixonado', police: 'Viatura', sea: 'Correnteza' };
+const CAUSES = CAUSE_NAMES;
 
 let screen = 'loading';
 let run = null;
@@ -103,8 +106,10 @@ function onEvent(name, data) {
 function startRun(seed = randomSeed()) {
   document.activeElement?.blur?.();
   const layout = layoutForScreen();
-  run = new Run({ seed, onEvent, layout });
-  recorder = createRecorder({ seed, layout, version: MY_VERSION });
+  // ajuda pra iniciante: se as últimas partidas foram curtas, começa mais leve
+  const assist = needsAssist(allRuns());
+  run = new Run({ seed, onEvent, layout, assist });
+  recorder = createRecorder({ seed, layout, version: MY_VERSION, assist });
   paused = false;
   audio.startGame();
   show(null);
@@ -149,12 +154,83 @@ function openGameOver() {
       <tr><td>Maior combo</td><td>×${run.combo.best}</td></tr>
       <tr><td>Celulares / bolsas / chinelos</td><td>${run.loot.phone} / ${run.loot.bag} / ${run.loot.flipflop}</td></tr>
       ${deaths}
-      <tr><td>Seed</td><td>${run.seed}</td></tr>
-    </table>`;
+      <tr><td>Seed</td><td>${run.seed}${run.assist ? ' · com ajuda' : ''}</td></tr>
+    </table>
+    <div id="rankNote"></div>`;
+  saveRun();
   updateMenuBest();
   audio.stopGame();
   show('gameover');
   document.querySelector('#gameover .primary').focus();
+}
+
+// Fim de partida: telemetria local, ranking local (com a gravação) e
+// verificação da pontuação refazendo a partida em segundo plano.
+let lastEntry = null;
+function saveRun() {
+  const rec = recorder?.finish(run);
+  const summary = summaryOf(run, rec, MY_VERSION);
+  recordRun(summary);
+  const entry = maybeAddTop(summary, rec);
+  lastEntry = entry;
+  $('onlineSubmit').hidden = !(entry && onlineEnabled());
+  if (!entry) return;
+  const pos = topRuns().findIndex((t) => t.id === entry.id) + 1;
+  $('rankNote').innerHTML = `<b>#${pos}</b> no seu ranking · <span id="verifyNote">conferindo a partida…</span>`;
+  setTimeout(async () => {
+    const { verify } = await import('./replay.js');
+    const res = rec ? verify(rec) : { ok: false };
+    markVerified(entry.id, res.ok);
+    const note = document.getElementById('verifyNote');
+    if (note) note.textContent = res.ok ? 'partida conferida ✓' : 'não deu pra conferir';
+  }, 50);
+}
+
+async function sendOnline() {
+  if (!lastEntry) return;
+  const nick = $('nick').value.trim();
+  try { localStorage.setItem('wavesson.nick', nick); } catch {}
+  $('sendOnline').disabled = true;
+  const res = await submitRun(lastEntry, nick).catch(() => ({ ok: false }));
+  $('sendOnline').textContent = res.ok ? 'enviado! (entra no ranking depois de conferido)' : 'falhou, tenta de novo';
+  $('sendOnline').disabled = res.ok;
+}
+
+const fmt = (n) => Math.floor(n).toLocaleString('pt-BR');
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+async function renderStats(tab = 'local') {
+  $('rankTabs').hidden = !onlineEnabled();
+  for (const b of document.querySelectorAll('#rankTabs .tab')) b.classList.toggle('on', b.dataset.rank === tab);
+  const list = $('rankList');
+  if (tab === 'online') {
+    list.innerHTML = '<li class="empty">carregando…</li>';
+    const rows = await fetchTop().catch(() => []);
+    list.innerHTML = rows.length
+      ? rows.map((r) => `<li><span class="pts">${fmt(r.score)}</span> ${esc(r.name)}<span class="meta">${r.meters} m · ${r.layout === 'portrait' ? 'em pé' : 'deitado'}</span></li>`).join('')
+      : '<li class="empty">ninguém ainda — seja o primeiro!</li>';
+  } else {
+    const top = topRuns();
+    list.innerHTML = top.length
+      ? top.map((t) => `<li><span class="pts">${fmt(t.score)}</span><span class="meta">${t.meters} m · ${t.layout === 'portrait' ? 'em pé' : 'deitado'} · ${t.at.slice(5, 10).split('-').reverse().join('/')}</span>${t.verified === true ? ' <span class="ok" title="partida refeita e conferida">✓</span>' : t.verified === false ? ' <span class="bad">?</span>' : ''}</li>`).join('')
+      : '<li class="empty">joga uma aí!</li>';
+  }
+  const s = summarize(allRuns());
+  if (!s.runs) { $('statsBody').innerHTML = '<p>Ainda sem partidas.</p>'; return; }
+  const maxAt = Math.max(1, ...s.deathsAt.map((d) => d.n));
+  const lastBucket = s.deathsAt.at(-1)?.m ?? 0;
+  const buckets = [];
+  for (let m = 0; m <= Math.min(lastBucket, 1500); m += 50) buckets.push(s.deathsAt.find((d) => d.m === m)?.n || 0);
+  $('statsBody').innerHTML = `
+    <div class="nums">
+      <div><b>${s.runs}</b><span>partidas</span></div>
+      <div><b>${s.median} m</b><span>metade chega até</span></div>
+      <div><b>${s.best} m</b><span>mais longe</span></div>
+      <div><b>${Math.round(s.earlyRate * 100)}%</b><span>morrem antes de 60 m</span></div>
+    </div>
+    <div class="bars">${s.causes.slice(0, 5).map((c) => `<div class="bar"><span>${c.name}</span><i class="${c.cause === 'left' || c.cause === 'love' ? '' : 'red'}" style="width:${Math.round(c.pct * 100)}%"></i><span>${Math.round(c.pct * 100)}%</span></div>`).join('')}</div>
+    <div class="hist" title="onde o bando perde gente (a cada 50 m)">${buckets.map((n) => `<i style="height:${Math.round((n / maxAt) * 100)}%"></i>`).join('')}</div>
+    <div class="hist-legend"><span>0 m</span><span>onde se perde gente</span><span>${Math.min(lastBucket, 1500)} m</span></div>`;
 }
 
 function renderTracks() {
@@ -188,6 +264,8 @@ function bindUi() {
       case 'prev': return howtoPage(-1);
       case 'credits': return show('credits');
       case 'music': renderTracks(); return show('music');
+      case 'stats': renderStats(); return show('stats');
+      case 'export': return exportJson();
       case 'back': return show('menu');
       case 'resume': return togglePause(false);
       case 'again': return startRun();
@@ -202,7 +280,7 @@ function bindUi() {
       if (p) pickPerk(p);
     }
     if (e.code === 'KeyP' || e.code === 'Escape') {
-      if (screen === 'howto' || screen === 'credits' || screen === 'music') return show('menu');
+      if (screen === 'howto' || screen === 'credits' || screen === 'music' || screen === 'stats') return show('menu');
       togglePause();
     }
     if (screen === 'howto' && e.code === 'ArrowRight') howtoPage(1);
@@ -264,6 +342,9 @@ async function boot() {
   const images = await loadImages((p) => { $('loadpct').textContent = `${Math.round(p * 100)}%`; });
   renderer = createRenderer(canvas, images);
   input = createInput(canvas);
+  $('sendOnline').addEventListener('click', sendOnline);
+  try { $('nick').value = localStorage.getItem('wavesson.nick') || ''; } catch {}
+  for (const b of document.querySelectorAll('#rankTabs .tab')) b.addEventListener('click', () => renderStats(b.dataset.rank));
   $('touchDash').addEventListener('pointerdown', (e) => { e.preventDefault(); input.queueDash(); });
   $('touchPause').addEventListener('pointerdown', (e) => { e.preventDefault(); togglePause(); });
   // a HUD do canvas usa a mesma letra dos menus; espera a fonte (no máx. 1,5 s)
